@@ -9,6 +9,7 @@ require (
 	github.com/gorilla/mux v1.7.4
 	github.com/joho/godotenv v1.3.0
 	github.com/mitchellh/mapstructure v1.1.2
+	github.com/sirupsen/logrus v1.4.2
 	github.com/twinj/uuid v1.0.0
 	go.mongodb.org/mongo-driver v1.3.1
 )

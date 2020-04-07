@@ -1,9 +1,12 @@
 package controller
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/yanrishbe/booking-service/model"
+	"github.com/yanrishbe/booking-service/util"
 )
 
 type userRouter struct {
@@ -27,7 +30,19 @@ func newUserRouter(service User) *userRouter {
 }
 
 func (ur userRouter) createUser(w http.ResponseWriter, r *http.Request) {
-	// pID := mux.Vars(r)
+	var u model.User
+	err := json.NewDecoder(r.Body).Decode(&u)
+	if err != nil {
+		util.JSONError(http.StatusUnprocessableEntity, w, err)
+		return
+	}
+	id, err := ur.service.Create(r.Context(), u)
+	if err != nil {
+		util.JSONError(http.StatusInternalServerError, w, err)
+		return
+	}
+	util.JSON(w, id)
+	//
 	// data, err := middleware.DataFromContext(r.Context())
 	// if err != nil {
 	// 	middleware.JSONError(w, e.InvalidMiddlewareContext(err), http.StatusBadRequest)
