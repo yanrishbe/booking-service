@@ -15,5 +15,5 @@ func NewUser(repository UserRepository) *User {
 }
 
 func (us User) Create(ctx context.Context, user model.User) (string, error) {
-	return us.db.Create(ctx, user)
+	return us.db.CreateUser(ctx, user)
 }

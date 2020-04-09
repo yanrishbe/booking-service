@@ -3,6 +3,7 @@ package mongo
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"os"
 	"time"
@@ -79,21 +80,89 @@ func NewBooking(ctx context.Context) (*Booking, error) {
 	}, err
 }
 
-func (bs Booking) Create(ctx context.Context, user model.User) (string, error) {
+func (bs Booking) CreateUser(ctx context.Context, user model.User) (string, error) {
 	query := bson.M{
-		"email": primitive.Regex{Pattern: user.Email, Options: "i"},
+		"email": user.Email,
 	}
 	count, err := bs.users.CountDocuments(ctx, query)
 	if err != nil {
-		return "", errors.New("count error " + err.Error())
+		return "", fmt.Errorf("count error %v", err)
 	}
 	if count > 0 {
-		return "", errors.New("login already exists: " + user.Email)
+		return "", fmt.Errorf("login already exists %s", user.Email)
 	}
 	res, err := bs.users.InsertOne(ctx, user)
 	if err != nil {
-		return "", errors.New("couldn't insert a user")
+		return "", fmt.Errorf("couldn't create a user %s: %v", user.Email, err)
 	}
 
 	return res.InsertedID.(primitive.ObjectID).Hex(), nil
+}
+
+func (bs Booking) UpdateUser(ctx context.Context, user model.User) error {
+	query := bson.M{
+		"email": user.Email,
+	}
+	userEntity, err := user.Entity()
+	if err != nil {
+		return err
+	}
+	_, err = bs.users.UpdateOne(ctx, query, userEntity)
+	if err != nil {
+		return fmt.Errorf("could not update a user %s", user.Email)
+	}
+	return nil
+}
+
+func (bs Booking) DeleteUser(ctx context.Context, email string) error {
+	query := bson.M{
+		"email": email,
+	}
+	_, err := bs.users.DeleteOne(ctx, query)
+	if err != nil {
+		return fmt.Errorf("could not delete a user %s", email)
+	}
+	return nil
+}
+
+func (bs Booking) GetUser(ctx context.Context, email string) (*model.User, error) {
+	query := bson.M{
+		"email": email,
+	}
+	response := bs.users.FindOne(ctx, query)
+	var userEntity model.UserEntity
+	err := response.Decode(&userEntity)
+	if err != nil {
+		return nil, fmt.Errorf("could not decode mongo response %v", err)
+	}
+	user := userEntity.DTO()
+	return &user, nil
+}
+
+func (bs Booking) GetAllUsers(ctx context.Context) ([]model.User, error) {
+	cur, err := bs.users.Find(ctx, bson.M{})
+	if err != nil {
+		return nil, fmt.Errorf("could not find all users %v", err)
+	}
+	var userEntities []model.UserEntity
+	for cur.Next(context.TODO()) {
+		var userEntity model.UserEntity
+		err := cur.Decode(&userEntity)
+		if err != nil {
+			return nil, fmt.Errorf("could not decode mongo response %v", err)
+		}
+		userEntities = append(userEntities, userEntity)
+	}
+	defer func() {
+		log.Fatalln(cur.Close(ctx))
+	}()
+	err = cur.Err()
+	if err != nil {
+		return nil, fmt.Errorf("cursor error %v", err)
+	}
+	var users []model.User
+	for i := range userEntities {
+		users = append(users, userEntities[i].DTO())
+	}
+	return users, nil
 }
