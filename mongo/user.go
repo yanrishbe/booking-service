@@ -155,6 +155,9 @@ func (bs Booking) GetUser(ctx context.Context, email string) (*model.User, error
 		"email": email,
 	}
 	response := bs.users.FindOne(ctx, query)
+	if response.Err() == mongo.ErrNoDocuments {
+		return nil, nil
+	}
 	var userEntity model.UserEntity
 	err := response.Decode(&userEntity)
 	if err != nil {

@@ -1,14 +1,17 @@
 package util
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
+	"net/http"
 
 	"github.com/yanrishbe/booking-service/model"
 )
 
 type UserResponse struct {
 	*model.Account `json:"account,omitempty"`
-	*model.Booking `json:"booking, omitempty"`
+	*model.Booking `json:"booking,omitempty"`
 	ID             string `json:"id,omitempty" bson:"_id,omitempty"`
 	Name           string `json:"name" bson:"name"`
 	Surname        string `json:"surname" bson:"surname"`
@@ -42,4 +45,28 @@ type TokenDetails struct {
 	RefreshExpiration int64  `json:"refresh_expiration,omitempty"`
 	RefreshToken      string `json:"refresh_token,omitempty"`
 	RefreshUuid       string `json:"refresh_uuid,omitempty"`
+}
+
+type ErrorMessage struct {
+	Error string `json:"error"`
+}
+
+func JSON(w http.ResponseWriter, i interface{}) {
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	err := json.NewEncoder(w).Encode(i)
+	if err != nil {
+		log.Println("encoding error")
+		return
+	}
+}
+
+func JSONError(code int, w http.ResponseWriter, err error) {
+	w.WriteHeader(code)
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	err = json.NewEncoder(w).Encode(ErrorMessage{
+		Error: err.Error(),
+	})
+	if err != nil {
+		log.Println("encoding error")
+	}
 }

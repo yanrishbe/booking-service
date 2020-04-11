@@ -32,7 +32,7 @@ func main() {
 	}
 
 	// create service layer
-	userService := service.NewUser(db)
+	userService := service.NewUser(db, db, db)
 	bookingService := service.NewBooking(db)
 	accountService := service.NewAccount(db)
 

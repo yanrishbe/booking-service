@@ -8,6 +8,7 @@ import (
 	"github.com/yanrishbe/booking-service/model"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 func (bs Booking) CreateBooking(ctx context.Context, booking model.Booking) (string, error) {
@@ -76,6 +77,9 @@ func (bs Booking) GetBooking(ctx context.Context, id string) (*model.Booking, er
 		"_id": _id,
 	}
 	response := bs.bookings.FindOne(ctx, query)
+	if response.Err() == mongo.ErrNoDocuments {
+		return nil, nil
+	}
 	var bookingEntity model.BookingEntity
 	err = response.Decode(&bookingEntity)
 	if err != nil {

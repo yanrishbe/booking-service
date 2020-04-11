@@ -15,8 +15,12 @@ type User struct {
 	bookingDB BookingRepository
 }
 
-func NewUser(repository UserRepository) *User {
-	return &User{userDB: repository}
+func NewUser(userDB UserRepository, accountDB AccountRepository, bookingDB BookingRepository) *User {
+	return &User{
+		userDB:    userDB,
+		accountDB: accountDB,
+		bookingDB: bookingDB,
+	}
 }
 
 func (us User) Create(ctx context.Context, user model.User) (string, error) {

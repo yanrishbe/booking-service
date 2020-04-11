@@ -56,10 +56,12 @@ func (ur userRouter) loginUser(w http.ResponseWriter, r *http.Request) {
 	err = ur.service.Login(r.Context(), l)
 	if err != nil {
 		util.JSONError(http.StatusUnauthorized, w, err)
+		return
 	}
 	token, err := createToken(l.Email)
 	if err != nil {
 		util.JSONError(http.StatusInternalServerError, w, err)
+		return
 	}
 	util.JSON(w, token)
 }
@@ -69,6 +71,7 @@ func (ur userRouter) getUser(w http.ResponseWriter, r *http.Request) {
 	response, err := ur.service.Get(r.Context(), email)
 	if err != nil {
 		util.JSONError(http.StatusInternalServerError, w, err)
+		return
 	}
 	util.JSON(w, response)
 }

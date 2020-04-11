@@ -6,6 +6,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// todo fix 0000000000000 ids
 type User struct {
 	ID         string `json:"id,omitempty" bson:"_id,omitempty"`
 	AccountID  string `json:"accountId,omitempty" bson:"accountId,omitempty"`

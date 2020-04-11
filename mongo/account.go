@@ -6,6 +6,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 
 	"github.com/yanrishbe/booking-service/model"
 )
@@ -61,6 +62,9 @@ func (bs Booking) GetAccount(ctx context.Context, id string) (*model.Account, er
 		"_id": _id,
 	}
 	response := bs.accounts.FindOne(ctx, query)
+	if response.Err() == mongo.ErrNoDocuments {
+		return nil, nil
+	}
 	var accountEntity model.AccountEntity
 	err = response.Decode(&accountEntity)
 	if err != nil {

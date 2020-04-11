@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -59,19 +58,20 @@ func createToken(email string) (*util.TokenDetails, error) {
 	return td, nil*/
 }
 
-func extractToken(r *http.Request) string {
-	authorizationHeader := r.Header.Get("Authorization")
-	if authorizationHeader != "" {
-		bearerToken := strings.Split(authorizationHeader, " ")
-		if len(bearerToken) == 2 {
-			return bearerToken[1]
-		}
-	}
-	return ""
-}
+// func extractToken(r *http.Request) string {
+// 	authorizationHeader := r.Header.Get("Authorization")
+// 	if authorizationHeader != "" {
+// 		bearerToken := strings.Split(authorizationHeader, " ")
+// 		if len(bearerToken) == 2 {
+// 			return bearerToken[1]
+// 		}
+// 	}
+// 	return ""
+// }
 
 func verifyToken(r *http.Request) (*jwt.Token, error) {
-	tokenString := extractToken(r)
+	// tokenString := extractToken(r)
+	tokenString := r.Header.Get("Authorization")
 	if tokenString == "" {
 		return nil, fmt.Errorf("an authorization header is required")
 	}
@@ -96,16 +96,20 @@ func validateTokenMiddleware(next http.HandlerFunc) http.HandlerFunc {
 			if ve, ok := err.(*jwt.ValidationError); ok {
 				if ve.Errors&jwt.ValidationErrorExpired != 0 {
 					util.JSONError(http.StatusUnauthorized, w, fmt.Errorf("the token has expired: %v", err))
+					return
 				}
 			}
 			util.JSONError(http.StatusUnauthorized, w, err)
+			return
 		}
 		_, ok := token.Claims.(jwt.Claims)
 		if !ok {
 			util.JSONError(http.StatusUnauthorized, w, fmt.Errorf("token payload is invalid"))
+			return
 		}
 		if !token.Valid {
 			util.JSONError(http.StatusUnauthorized, w, fmt.Errorf("token is invalid"))
+			return
 		}
 		next(w, r)
 	}
