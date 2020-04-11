@@ -4,14 +4,15 @@ import (
 	"context"
 
 	"github.com/yanrishbe/booking-service/model"
+	"github.com/yanrishbe/booking-service/util"
 )
 
 // User defines interface for user-related CRUD operations.
 type User interface {
 	Create(ctx context.Context, user model.User) (string, error)
-	// Login ()
+	Login(ctx context.Context, loginRequest util.LoginRequest) error
+	Get(ctx context.Context, email string) (*util.UserResponse, error)
 	// Edit ()
-	// Get ()
 	// GetAll()
 	// Delete()
 	// DeleteAll()

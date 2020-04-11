@@ -8,6 +8,7 @@ import (
 
 type UserRepository interface {
 	CreateUser(ctx context.Context, user model.User) (string, error)
+	CheckPassword(ctx context.Context, email string) (string, error)
 	UpdateUser(ctx context.Context, user model.User) error
 	DeleteUser(ctx context.Context, email string) error
 	GetUser(ctx context.Context, email string) (*model.User, error)

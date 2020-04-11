@@ -14,6 +14,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"go.mongodb.org/mongo-driver/x/bsonx"
+	"golang.org/x/crypto/bcrypt"
 
 	"github.com/yanrishbe/booking-service/model"
 )
@@ -81,6 +82,11 @@ func NewBooking(ctx context.Context) (*Booking, error) {
 }
 
 func (bs Booking) CreateUser(ctx context.Context, user model.User) (string, error) {
+	hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), 5)
+	if err != nil {
+		return "", fmt.Errorf("could not hash the password")
+	}
+	user.Password = string(hash)
 	query := bson.M{
 		"email": user.Email,
 	}
@@ -97,6 +103,25 @@ func (bs Booking) CreateUser(ctx context.Context, user model.User) (string, erro
 	}
 
 	return res.InsertedID.(primitive.ObjectID).Hex(), nil
+}
+
+type password struct {
+	Password string `bson:"password"`
+}
+
+func (bs Booking) CheckPassword(ctx context.Context, email string) (string, error) {
+	opts := options.FindOne().SetProjection(bson.M{
+		"password": 1,
+	})
+	query := bson.M{
+		"email": email,
+	}
+	var passw password
+	err := bs.users.FindOne(ctx, query, opts).Decode(&passw)
+	if err != nil {
+		return "", fmt.Errorf("could not decode mongo response %v", err)
+	}
+	return passw.Password, nil
 }
 
 func (bs Booking) UpdateUser(ctx context.Context, user model.User) error {
