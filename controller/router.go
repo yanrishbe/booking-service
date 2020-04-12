@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"fmt"
+	"log"
 
 	"github.com/gorilla/mux"
 )
@@ -11,9 +11,9 @@ type API struct {
 }
 
 const (
-	userRoute    = "/user"
-	accountRoute = "/account"
-	bookingRoute = "/booking"
+	usersRoute    = "/users"
+	accountsRoute = "/accounts"
+	bookingsRoute = "/bookings"
 )
 
 // NewRouter creates a router for booking-service API.
@@ -25,11 +25,11 @@ func NewRouter(userService User, accountService Account, bookingService Booking)
 	accountRouter := newAccountRouter(accountService)
 	bookingRouter := newBookingRouter(bookingService)
 
-	fmt.Println("Starting the application...")
+	log.Println("start")
 
-	api.PathPrefix(userRoute).Handler(userRouter)
-	api.PathPrefix(accountRoute).Handler(accountRouter)
-	api.PathPrefix(bookingRoute).Handler(bookingRouter)
+	api.PathPrefix(usersRoute).Handler(userRouter)
+	api.PathPrefix(accountsRoute).Handler(accountRouter)
+	api.PathPrefix(bookingsRoute).Handler(bookingRouter)
 
 	return api
 }

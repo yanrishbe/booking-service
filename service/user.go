@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 
 	"golang.org/x/crypto/bcrypt"
 
@@ -27,26 +28,44 @@ func (us User) Create(ctx context.Context, user model.User) (string, error) {
 	return us.userDB.CreateUser(ctx, user)
 }
 
-func (us User) Login(ctx context.Context, loginRequest util.LoginRequest) error {
-	password, err := us.userDB.CheckPassword(ctx, loginRequest.Email)
+func (us User) Login(ctx context.Context, loginRequest util.LoginRequest) (string, error) {
+	passwordAndID, err := us.userDB.GetPasswordAndID(ctx, loginRequest.Email)
 	if err != nil {
-		return err
+		return "", err
 	}
-	return bcrypt.CompareHashAndPassword([]byte(password), []byte(loginRequest.Password))
+	if passwordAndID == nil {
+		return "", fmt.Errorf("could not fetch users data")
+	}
+	return passwordAndID.ID, bcrypt.CompareHashAndPassword([]byte(passwordAndID.Password), []byte(loginRequest.Password))
 }
 
-func (us User) Get(ctx context.Context, email string) (*util.UserResponse, error) {
-	user, err := us.userDB.GetUser(ctx, email)
+func (us User) Get(ctx context.Context, id string) (*util.UserResponse, error) {
+	user, err := us.userDB.GetUser(ctx, id)
 	if err != nil {
 		return nil, err
 	}
-	account, err := us.accountDB.GetAccount(ctx, user.AccountID)
-	if err != nil {
-		return nil, err
+	var account *model.Account
+	if user.AccountID != "" {
+		account, err = us.accountDB.GetAccount(ctx, user.AccountID)
+		if err != nil {
+			return nil, err
+		}
 	}
-	booking, err := us.bookingDB.GetBooking(ctx, user.BookingID)
-	if err != nil {
-		return nil, err
+	var booking *model.Booking
+	if user.BookingID != "" {
+		booking, err = us.bookingDB.GetBooking(ctx, user.BookingID)
+		if err != nil {
+			return nil, err
+		}
 	}
 	return util.NewUserResponse(user, account, booking)
+}
+
+func (us User) Update(ctx context.Context, userRequest util.UpdateUserRequest) error {
+	// return us.userDB.UpdateUser(ctx, userRequest)
+	return nil
+}
+
+func (us User) Delete(ctx context.Context, id string) error {
+	return us.userDB.DeleteUser(ctx, id)
 }

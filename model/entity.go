@@ -6,7 +6,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// todo fix 0000000000000 ids
 type User struct {
 	ID         string `json:"id,omitempty" bson:"_id,omitempty"`
 	AccountID  string `json:"accountId,omitempty" bson:"accountId,omitempty"`
@@ -35,37 +34,37 @@ func (u User) Entity() (*UserEntity, error) {
 		}
 	}
 	if u.AccountID != "" {
-		entity.AccountID, err = primitive.ObjectIDFromHex(u.AccountID)
+		objID, err := primitive.ObjectIDFromHex(u.AccountID)
 		if err != nil {
 			return nil, fmt.Errorf("invalid id object id: %v", err)
 		}
+		entity.AccountID = &objID
 	}
 	if u.BookingID != "" {
-		entity.BookingID, err = primitive.ObjectIDFromHex(u.BookingID)
+		objID, err := primitive.ObjectIDFromHex(u.BookingID)
 		if err != nil {
 			return nil, fmt.Errorf("invalid id object id: %v", err)
 		}
+		entity.BookingID = &objID
 	}
 	return &entity, nil
 }
 
 type UserEntity struct {
-	ID         primitive.ObjectID `json:"id,omitempty" bson:"_id,omitempty"`
-	AccountID  primitive.ObjectID `json:"accountId,omitempty" bson:"accountId,omitempty"`
-	BookingID  primitive.ObjectID `json:"bookingId,omitempty" bson:"bookingId,omitempty"`
-	Name       string             `json:"name" bson:"name"`
-	Surname    string             `json:"surname" bson:"surname"`
-	Patronymic string             `json:"patronymic" bson:"patronymic"`
-	Phone      string             `json:"phone" bson:"phone" `
-	Email      string             `json:"email" bson:"email"`
-	Password   string             `json:"password" bson:"password"`
+	ID         primitive.ObjectID  `json:"id,omitempty" bson:"_id,omitempty"`
+	AccountID  *primitive.ObjectID `json:"accountId,omitempty" bson:"accountId,omitempty"`
+	BookingID  *primitive.ObjectID `json:"bookingId,omitempty" bson:"bookingId,omitempty"`
+	Name       string              `json:"name" bson:"name"`
+	Surname    string              `json:"surname" bson:"surname"`
+	Patronymic string              `json:"patronymic" bson:"patronymic"`
+	Phone      string              `json:"phone" bson:"phone" `
+	Email      string              `json:"email" bson:"email"`
+	Password   string              `json:"password" bson:"password"`
 }
 
 func (ue UserEntity) DTO() User {
-	return User{
+	user := User{
 		ID:         ue.ID.Hex(),
-		AccountID:  ue.AccountID.Hex(),
-		BookingID:  ue.BookingID.Hex(),
 		Name:       ue.Name,
 		Surname:    ue.Surname,
 		Patronymic: ue.Patronymic,
@@ -73,6 +72,13 @@ func (ue UserEntity) DTO() User {
 		Email:      ue.Email,
 		Password:   ue.Password,
 	}
+	if ue.AccountID != nil {
+		user.AccountID = ue.AccountID.Hex()
+	}
+	if ue.BookingID != nil {
+		user.BookingID = ue.BookingID.Hex()
+	}
+	return user
 }
 
 type Account struct {

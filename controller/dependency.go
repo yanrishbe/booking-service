@@ -10,12 +10,10 @@ import (
 // User defines interface for user-related CRUD operations.
 type User interface {
 	Create(ctx context.Context, user model.User) (string, error)
-	Login(ctx context.Context, loginRequest util.LoginRequest) error
-	Get(ctx context.Context, email string) (*util.UserResponse, error)
-	// Edit ()
-	// GetAll()
-	// Delete()
-	// DeleteAll()
+	Login(ctx context.Context, loginRequest util.LoginRequest) (string, error)
+	Get(ctx context.Context, id string) (*util.UserResponse, error)
+	Delete(ctx context.Context, id string) error
+	Update(ctx context.Context, userRequest util.UpdateUserRequest) error
 }
 
 // Booking defines interface for booking-related CRUD operations.

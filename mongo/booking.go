@@ -3,12 +3,12 @@ package mongo
 import (
 	"context"
 	"fmt"
-	"log"
 
-	"github.com/yanrishbe/booking-service/model"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+
+	"github.com/yanrishbe/booking-service/model"
 )
 
 func (bs Booking) CreateBooking(ctx context.Context, booking model.Booking) (string, error) {
@@ -87,32 +87,4 @@ func (bs Booking) GetBooking(ctx context.Context, id string) (*model.Booking, er
 	}
 	booking := bookingEntity.DTO()
 	return &booking, nil
-}
-
-func (bs Booking) GetAllBookings(ctx context.Context) ([]model.Booking, error) {
-	cur, err := bs.bookings.Find(ctx, bson.M{})
-	if err != nil {
-		return nil, fmt.Errorf("could not find all bookings %v", err)
-	}
-	var bookingEntities []model.BookingEntity
-	for cur.Next(context.TODO()) {
-		var bookingEntity model.BookingEntity
-		err := cur.Decode(&bookingEntity)
-		if err != nil {
-			return nil, fmt.Errorf("could not decode mongo response %v", err)
-		}
-		bookingEntities = append(bookingEntities, bookingEntity)
-	}
-	defer func() {
-		log.Fatalln(cur.Close(ctx))
-	}()
-	err = cur.Err()
-	if err != nil {
-		return nil, fmt.Errorf("cursor error %v", err)
-	}
-	var bookings []model.Booking
-	for i := range bookingEntities {
-		bookings = append(bookings, bookingEntities[i].DTO())
-	}
-	return bookings, nil
 }

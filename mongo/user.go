@@ -84,7 +84,7 @@ func NewBooking(ctx context.Context) (*Booking, error) {
 func (bs Booking) CreateUser(ctx context.Context, user model.User) (string, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), 5)
 	if err != nil {
-		return "", fmt.Errorf("could not hash the password")
+		return "", fmt.Errorf("could not hash the passwordAndID")
 	}
 	user.Password = string(hash)
 	query := bson.M{
@@ -105,61 +105,56 @@ func (bs Booking) CreateUser(ctx context.Context, user model.User) (string, erro
 	return res.InsertedID.(primitive.ObjectID).Hex(), nil
 }
 
-type password struct {
-	Password string `bson:"password"`
+type passwordAndID struct {
+	Password string              `bson:"password"`
+	ID       *primitive.ObjectID `bson:"_id"`
 }
 
-func (bs Booking) CheckPassword(ctx context.Context, email string) (string, error) {
+type PasswordAndIDResponse struct {
+	Password string
+	ID       string
+}
+
+func (bs Booking) GetPasswordAndID(ctx context.Context, email string) (*PasswordAndIDResponse, error) {
 	opts := options.FindOne().SetProjection(bson.M{
 		"password": 1,
+		"_id":      1,
 	})
 	query := bson.M{
 		"email": email,
 	}
-	var passw password
-	err := bs.users.FindOne(ctx, query, opts).Decode(&passw)
-	if err != nil {
-		return "", fmt.Errorf("could not decode mongo response %v", err)
+	var passw passwordAndID
+	response := bs.users.FindOne(ctx, query, opts)
+	if response.Err() == mongo.ErrNoDocuments {
+		return nil, nil
 	}
-	return passw.Password, nil
+	err := response.Decode(&passw)
+	if err != nil {
+		return nil, fmt.Errorf("could not decode mongo response %v", err)
+	}
+	passwordAndIDResponse := PasswordAndIDResponse{
+		Password: passw.Password,
+	}
+	if passw.ID != nil {
+		passwordAndIDResponse.ID = passw.ID.Hex()
+	}
+	return &passwordAndIDResponse, nil
 }
 
-func (bs Booking) UpdateUser(ctx context.Context, user model.User) error {
-	query := bson.M{
-		"email": user.Email,
-	}
-	userEntity, err := user.Entity()
+func (bs Booking) GetUser(ctx context.Context, id string) (*model.User, error) {
+	_id, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		return err
+		return nil, fmt.Errorf("could not parse object id %s: %v", id, err)
 	}
-	_, err = bs.users.UpdateOne(ctx, query, userEntity)
-	if err != nil {
-		return fmt.Errorf("could not update a user %s", user.Email)
-	}
-	return nil
-}
-
-func (bs Booking) DeleteUser(ctx context.Context, email string) error {
 	query := bson.M{
-		"email": email,
-	}
-	_, err := bs.users.DeleteOne(ctx, query)
-	if err != nil {
-		return fmt.Errorf("could not delete a user %s", email)
-	}
-	return nil
-}
-
-func (bs Booking) GetUser(ctx context.Context, email string) (*model.User, error) {
-	query := bson.M{
-		"email": email,
+		"_id": _id,
 	}
 	response := bs.users.FindOne(ctx, query)
 	if response.Err() == mongo.ErrNoDocuments {
 		return nil, nil
 	}
 	var userEntity model.UserEntity
-	err := response.Decode(&userEntity)
+	err = response.Decode(&userEntity)
 	if err != nil {
 		return nil, fmt.Errorf("could not decode mongo response %v", err)
 	}
@@ -167,30 +162,49 @@ func (bs Booking) GetUser(ctx context.Context, email string) (*model.User, error
 	return &user, nil
 }
 
-func (bs Booking) GetAllUsers(ctx context.Context) ([]model.User, error) {
-	cur, err := bs.users.Find(ctx, bson.M{})
+// func (bs Booking) UpdateUser(ctx context.Context, userRequest util.UpdateUserRequest) error {
+// 	_id, err := primitive.ObjectIDFromHex(userRequest.ID)
+// 	if err != nil {
+// 		return fmt.Errorf("could not parse object id %s: %v", userRequest.ID, err)
+// 	}
+// 	query := bson.M{
+// 		"_id": _id,
+// 	}
+// 	////////////////////////
+// 	userEntity, err := user.Entity()
+// 	if err != nil {
+// 		return err
+// 	}
+// 	_, err = bs.users.UpdateOne(ctx, query, userEntity)
+// 	if err != nil {
+// 		return fmt.Errorf("could not update a user %s", user.ID)
+// 	}
+// 	return nil
+//
+// 	result, err = podcastsCollection.UpdateMany(
+// 		ctx,
+// 		bson.M{"title": "The Polyglot Developer Podcast"},
+// 		bson.D{
+// 			{"$set", bson.D{{"author", "Nicolas Raboy"}}},
+// 		},
+// 	)
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
+// 	fmt.Printf("Updated %v Documents!\n", result.ModifiedCount)
+// }
+
+func (bs Booking) DeleteUser(ctx context.Context, id string) error {
+	_id, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		return nil, fmt.Errorf("could not find all users %v", err)
+		return fmt.Errorf("could not parse object id %s: %v", id, err)
 	}
-	var userEntities []model.UserEntity
-	for cur.Next(context.TODO()) {
-		var userEntity model.UserEntity
-		err := cur.Decode(&userEntity)
-		if err != nil {
-			return nil, fmt.Errorf("could not decode mongo response %v", err)
-		}
-		userEntities = append(userEntities, userEntity)
+	query := bson.M{
+		"_id": _id,
 	}
-	defer func() {
-		log.Fatalln(cur.Close(ctx))
-	}()
-	err = cur.Err()
+	_, err = bs.users.DeleteOne(ctx, query)
 	if err != nil {
-		return nil, fmt.Errorf("cursor error %v", err)
+		return fmt.Errorf("could not delete a user %s", id)
 	}
-	var users []model.User
-	for i := range userEntities {
-		users = append(users, userEntities[i].DTO())
-	}
-	return users, nil
+	return nil
 }

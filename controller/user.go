@@ -1,7 +1,9 @@
 package controller
 
 import (
+	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -17,16 +19,15 @@ type userRouter struct {
 
 func newUserRouter(service User) *userRouter {
 	router := userRouter{
-		mux.NewRouter().PathPrefix(userRoute).Subrouter(),
+		mux.NewRouter().PathPrefix(usersRoute).Subrouter(),
 		service,
 	}
 
 	router.Path("").Methods(http.MethodPost).HandlerFunc(router.createUser)
 	router.Path("/login").Methods(http.MethodPost).HandlerFunc(router.loginUser)
-	router.Path("/{email}").Methods(http.MethodGet).HandlerFunc(validateTokenMiddleware(router.getUser))
-	router.Path("/{email}").Methods(http.MethodPost).HandlerFunc(validateTokenMiddleware(router.updateUser))
-	router.Path("/{email}").Methods(http.MethodDelete).HandlerFunc(validateTokenMiddleware(router.deleteUser))
-	router.Path("").Methods(http.MethodGet).HandlerFunc(validateTokenMiddleware(router.getAllUsers))
+	router.Path("/{id}").Methods(http.MethodGet).HandlerFunc(validateTokenMiddleware(router.getUser))
+	router.Path("/{id}").Methods(http.MethodPut).HandlerFunc(validateTokenMiddleware(router.updateUser))
+	router.Path("/{id}").Methods(http.MethodDelete).HandlerFunc(validateTokenMiddleware(router.deleteUser))
 
 	return &router
 }
@@ -53,12 +54,12 @@ func (ur userRouter) loginUser(w http.ResponseWriter, r *http.Request) {
 		util.JSONError(http.StatusUnprocessableEntity, w, err)
 		return
 	}
-	err = ur.service.Login(r.Context(), l)
+	id, err := ur.service.Login(r.Context(), l)
 	if err != nil {
 		util.JSONError(http.StatusUnauthorized, w, err)
 		return
 	}
-	token, err := createToken(l.Email)
+	token, err := createToken(l.Email, id)
 	if err != nil {
 		util.JSONError(http.StatusInternalServerError, w, err)
 		return
@@ -67,8 +68,9 @@ func (ur userRouter) loginUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (ur userRouter) getUser(w http.ResponseWriter, r *http.Request) {
-	email := mux.Vars(r)["email"]
-	response, err := ur.service.Get(r.Context(), email)
+	id := mux.Vars(r)["id"]
+	validateRights(r.Context(), w, id)
+	response, err := ur.service.Get(r.Context(), id)
 	if err != nil {
 		util.JSONError(http.StatusInternalServerError, w, err)
 		return
@@ -77,43 +79,43 @@ func (ur userRouter) getUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (ur userRouter) updateUser(w http.ResponseWriter, r *http.Request) {
-	// pID := mux.Vars(r)
-	// data, err := middleware.DataFromContext(r.Context())
+	id := mux.Vars(r)["id"]
+	validateRights(r.Context(), w, id)
+	// var u util.UpdateUserRequest
+	// err := json.NewDecoder(r.Body).Decode(&u)
 	// if err != nil {
-	// 	middleware.JSONError(w, e.InvalidMiddlewareContext(err), http.StatusBadRequest)
+	// 	util.JSONError(http.StatusUnprocessableEntity, w, err)
 	// 	return
 	// }
-	// err = ur.service.Delete(r.Context(), data, pID["id"])
+	// err = ur.service.Update(r.Context(), u)
 	// if err != nil {
-	// 	middleware.JSONError(w, err, http.StatusInternalServerError)
+	// 	util.JSONError(http.StatusInternalServerError, w, err)
+	// 	return
 	// }
-	// middleware.Empty(w, http.StatusCreated)
+	// // todo fix this
+	// util.JSON(w, nil)
 }
 
 func (ur userRouter) deleteUser(w http.ResponseWriter, r *http.Request) {
-	// pID := mux.Vars(r)
-	// data, err := middleware.DataFromContext(r.Context())
-	// if err != nil {
-	// 	middleware.JSONError(w, e.InvalidMiddlewareContext(err), http.StatusBadRequest)
-	// 	return
-	// }
-	// err = ur.service.Delete(r.Context(), data, pID["id"])
-	// if err != nil {
-	// 	middleware.JSONError(w, err, http.StatusInternalServerError)
-	// }
-	// middleware.Empty(w, http.StatusCreated)
+	id := mux.Vars(r)["id"]
+	validateRights(r.Context(), w, id)
+	err := ur.service.Delete(r.Context(), id)
+	if err != nil {
+		util.JSONError(http.StatusInternalServerError, w, err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }
 
-func (ur userRouter) getAllUsers(w http.ResponseWriter, r *http.Request) {
-	// pID := mux.Vars(r)
-	// data, err := middleware.DataFromContext(r.Context())
-	// if err != nil {
-	// 	middleware.JSONError(w, e.InvalidMiddlewareContext(err), http.StatusBadRequest)
-	// 	return
-	// }
-	// err = ur.service.Delete(r.Context(), data, pID["id"])
-	// if err != nil {
-	// 	middleware.JSONError(w, err, http.StatusInternalServerError)
-	// }
-	// middleware.Empty(w, http.StatusCreated)
+func validateRights(ctx context.Context, w http.ResponseWriter, id string) {
+	auth, ok := ctx.Value("auth").(Authorization)
+	if !ok {
+		util.JSONError(http.StatusUnauthorized, w, fmt.Errorf("user doesn't have enough rights to use resource"))
+		return
+	}
+	if auth.ID != id && auth.Role != admin {
+		util.JSONError(http.StatusUnauthorized, w, fmt.Errorf("user doesn't have enough rights to use resource"))
+		return
+	}
+	return
 }

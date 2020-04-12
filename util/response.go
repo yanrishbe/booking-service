@@ -40,6 +40,7 @@ func NewUserResponse(user *model.User, account *model.Account, booking *model.Bo
 
 type TokenDetails struct {
 	AccessToken       string `json:"access_token"`
+	Role              string `json:"role"`
 	AccessExpiration  int64  `json:"access_expiration"`
 	AccessUuid        string `json:"access_uuid,omitempty"`
 	RefreshExpiration int64  `json:"refresh_expiration,omitempty"`
