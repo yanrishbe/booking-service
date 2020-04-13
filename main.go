@@ -34,7 +34,7 @@ func main() {
 	// create service layer
 	userService := service.NewUser(db, db, db)
 	bookingService := service.NewBooking(db)
-	accountService := service.NewAccount(db)
+	accountService := service.NewAccount(db, db)
 
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGTERM, syscall.SIGINT)

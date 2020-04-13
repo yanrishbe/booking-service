@@ -29,6 +29,6 @@ type Booking interface {
 // Account defines interface for account-related CRU operations.
 type Account interface {
 	Create(ctx context.Context, account model.Account, userID string) (string, error)
+	Get(ctx context.Context, id string) (*model.Account, error)
 	// Edit ()
-	// Get ()
 }
