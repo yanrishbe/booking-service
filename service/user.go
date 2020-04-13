@@ -62,10 +62,25 @@ func (us User) Get(ctx context.Context, id string) (*util.UserResponse, error) {
 }
 
 func (us User) Update(ctx context.Context, userRequest util.UpdateUserRequest) error {
-	// return us.userDB.UpdateUser(ctx, userRequest)
-	return nil
+	return us.userDB.UpdateUser(ctx, userRequest)
 }
 
 func (us User) Delete(ctx context.Context, id string) error {
+	user, err := us.userDB.GetUser(ctx, id)
+	if err != nil {
+		return err
+	}
+	if user.AccountID != "" {
+		err = us.accountDB.DeleteAccount(ctx, user.AccountID)
+		if err != nil {
+			return err
+		}
+	}
+	if user.BookingID != "" {
+		err = us.bookingDB.DeleteBooking(ctx, user.BookingID)
+		if err != nil {
+			return err
+		}
+	}
 	return us.userDB.DeleteUser(ctx, id)
 }

@@ -12,7 +12,7 @@ type API struct {
 
 const (
 	usersRoute    = "/users"
-	accountsRoute = "/accounts"
+	accountsRoute = usersRoute + "/{id}/accounts"
 	bookingsRoute = "/bookings"
 )
 

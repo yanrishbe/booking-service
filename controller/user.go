@@ -81,19 +81,19 @@ func (ur userRouter) getUser(w http.ResponseWriter, r *http.Request) {
 func (ur userRouter) updateUser(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
 	validateRights(r.Context(), w, id)
-	// var u util.UpdateUserRequest
-	// err := json.NewDecoder(r.Body).Decode(&u)
-	// if err != nil {
-	// 	util.JSONError(http.StatusUnprocessableEntity, w, err)
-	// 	return
-	// }
-	// err = ur.service.Update(r.Context(), u)
-	// if err != nil {
-	// 	util.JSONError(http.StatusInternalServerError, w, err)
-	// 	return
-	// }
-	// // todo fix this
-	// util.JSON(w, nil)
+	var u util.UpdateUserRequest
+	err := json.NewDecoder(r.Body).Decode(&u)
+	if err != nil {
+		util.JSONError(http.StatusUnprocessableEntity, w, err)
+		return
+	}
+	u.ID = id
+	err = ur.service.Update(r.Context(), u)
+	if err != nil {
+		util.JSONError(http.StatusInternalServerError, w, err)
+		return
+	}
+	w.WriteHeader(http.StatusAccepted)
 }
 
 func (ur userRouter) deleteUser(w http.ResponseWriter, r *http.Request) {
@@ -113,7 +113,7 @@ func validateRights(ctx context.Context, w http.ResponseWriter, id string) {
 		util.JSONError(http.StatusUnauthorized, w, fmt.Errorf("user doesn't have enough rights to use resource"))
 		return
 	}
-	if auth.ID != id && auth.Role != admin {
+	if auth.ID != id && auth.Role != model.Admin {
 		util.JSONError(http.StatusUnauthorized, w, fmt.Errorf("user doesn't have enough rights to use resource"))
 		return
 	}

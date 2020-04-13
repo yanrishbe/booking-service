@@ -38,6 +38,24 @@ func NewUserResponse(user *model.User, account *model.Account, booking *model.Bo
 	}, nil
 }
 
+type AccountResponse struct {
+	ID     string `json:"id,omitempty"`
+	Bank   string `json:"bank"`
+	Amount string `json:"amount"`
+}
+
+func NewAccountResponse(account model.Account) *AccountResponse {
+	accResp := AccountResponse{
+		ID:   account.ID,
+		Bank: account.Bank,
+	}
+	cents := account.Amount % 100
+	rest := account.Amount / 100
+	amount := fmt.Sprintf("%s.%s", rest, cents)
+	accResp.Amount = amount
+	return &accResp
+}
+
 type TokenDetails struct {
 	AccessToken       string `json:"access_token"`
 	Role              string `json:"role"`

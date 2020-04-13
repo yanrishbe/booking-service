@@ -6,6 +6,9 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+const Admin = "yana.strabuk@gmail.com"
+const AdminBank = "JPMorgan"
+
 type User struct {
 	ID         string `json:"id,omitempty" bson:"_id,omitempty"`
 	AccountID  string `json:"accountId,omitempty" bson:"accountId,omitempty"`
@@ -82,15 +85,15 @@ func (ue UserEntity) DTO() User {
 }
 
 type Account struct {
-	ID       string `json:"id,omitempty" bson:"_id,omitempty"`
-	Currency string `json:"currency" bson:"currency"`
-	Amount   int    `json:"amount" bson:"amount"`
+	ID     string `json:"id,omitempty" bson:"_id,omitempty"`
+	Bank   string `json:"bank" bson:"bank"`
+	Amount int    `json:"amount" bson:"amount"`
 }
 
 func (a Account) Entity() (*AccountEntity, error) {
 	entity := AccountEntity{
-		Currency: a.Currency,
-		Amount:   a.Amount,
+		Bank:   a.Bank,
+		Amount: a.Amount,
 	}
 	var err error
 	if a.ID != "" {
@@ -103,16 +106,16 @@ func (a Account) Entity() (*AccountEntity, error) {
 }
 
 type AccountEntity struct {
-	ID       primitive.ObjectID `json:"id,omitempty" bson:"_id,omitempty"`
-	Currency string             `json:"currency" bson:"currency"`
-	Amount   int                `json:"amount" bson:"amount"`
+	ID     primitive.ObjectID `json:"id,omitempty" bson:"_id,omitempty"`
+	Bank   string             `json:"bank" bson:"bank"`
+	Amount int                `json:"amount" bson:"amount"`
 }
 
 func (ae AccountEntity) DTO() Account {
 	return Account{
-		ID:       ae.ID.Hex(),
-		Currency: ae.Currency,
-		Amount:   ae.Amount,
+		ID:     ae.ID.Hex(),
+		Bank:   ae.Bank,
+		Amount: ae.Amount,
 	}
 }
 

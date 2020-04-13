@@ -17,6 +17,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/yanrishbe/booking-service/model"
+	"github.com/yanrishbe/booking-service/util"
 )
 
 type Booking struct {
@@ -25,6 +26,8 @@ type Booking struct {
 	bookings *mongo.Collection
 	accounts *mongo.Collection
 }
+
+const adminPassword = "admin"
 
 func NewBooking(ctx context.Context) (*Booking, error) {
 	connStr, ok := os.LookupEnv("MONGO_URI")
@@ -73,6 +76,26 @@ func NewBooking(ctx context.Context) (*Booking, error) {
 	if err != nil {
 		return nil, err
 	}
+	res, err := accounts.InsertOne(ctx, bson.D{
+		{"bank", model.AdminBank},
+		{"amount", 5000000},
+	})
+	if err != nil {
+		return nil, fmt.Errorf("couldn't create admin account%v", err)
+	}
+	accountID := res.InsertedID.(primitive.ObjectID)
+	hash, err := bcrypt.GenerateFromPassword([]byte(adminPassword), 5)
+	if err != nil {
+		return nil, fmt.Errorf("could not hash the admin password")
+	}
+	_, err = users.InsertOne(ctx, bson.D{
+		{"email", model.Admin},
+		{"password", string(hash)},
+		{"accountId", accountID},
+	})
+	if err != nil {
+		return nil, fmt.Errorf("couldn't create admin %v", err)
+	}
 	return &Booking{
 		Database: bookingServiceDB,
 		users:    users,
@@ -84,7 +107,7 @@ func NewBooking(ctx context.Context) (*Booking, error) {
 func (bs Booking) CreateUser(ctx context.Context, user model.User) (string, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), 5)
 	if err != nil {
-		return "", fmt.Errorf("could not hash the passwordAndID")
+		return "", fmt.Errorf("could not hash the password")
 	}
 	user.Password = string(hash)
 	query := bson.M{
@@ -162,37 +185,57 @@ func (bs Booking) GetUser(ctx context.Context, id string) (*model.User, error) {
 	return &user, nil
 }
 
-// func (bs Booking) UpdateUser(ctx context.Context, userRequest util.UpdateUserRequest) error {
-// 	_id, err := primitive.ObjectIDFromHex(userRequest.ID)
-// 	if err != nil {
-// 		return fmt.Errorf("could not parse object id %s: %v", userRequest.ID, err)
-// 	}
-// 	query := bson.M{
-// 		"_id": _id,
-// 	}
-// 	////////////////////////
-// 	userEntity, err := user.Entity()
-// 	if err != nil {
-// 		return err
-// 	}
-// 	_, err = bs.users.UpdateOne(ctx, query, userEntity)
-// 	if err != nil {
-// 		return fmt.Errorf("could not update a user %s", user.ID)
-// 	}
-// 	return nil
-//
-// 	result, err = podcastsCollection.UpdateMany(
-// 		ctx,
-// 		bson.M{"title": "The Polyglot Developer Podcast"},
-// 		bson.D{
-// 			{"$set", bson.D{{"author", "Nicolas Raboy"}}},
-// 		},
-// 	)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-// 	fmt.Printf("Updated %v Documents!\n", result.ModifiedCount)
-// }
+func (bs Booking) UpdateUser(ctx context.Context, userRequest util.UpdateUserRequest) error {
+	_id, err := primitive.ObjectIDFromHex(userRequest.ID)
+	if err != nil {
+		return fmt.Errorf("could not parse object id %s: %v", userRequest.ID, err)
+	}
+	query := bson.M{
+		"_id": _id,
+	}
+	updateDoc := bson.D{
+		{"$set",
+			bson.D{
+				{"name", userRequest.Name},
+				{"surname", userRequest.Surname},
+				{"patronymic", userRequest.Patronymic},
+				{"phone", userRequest.Phone},
+				{"email", userRequest.Email},
+			},
+		},
+	}
+	_, err = bs.users.UpdateOne(ctx, query, updateDoc)
+	if err != nil {
+		return fmt.Errorf("could not update a user %s", userRequest.ID)
+	}
+	return nil
+}
+
+func (bs Booking) UpdateAccountID(ctx context.Context, accID string, userID string) error {
+	_id, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return fmt.Errorf("could not parse object id %s: %v", userID, err)
+	}
+	_accID, err := primitive.ObjectIDFromHex(accID)
+	if err != nil {
+		return fmt.Errorf("could not parse object id %s: %v", accID, err)
+	}
+	query := bson.M{
+		"_id": _id,
+	}
+	updateDoc := bson.D{
+		{"$set",
+			bson.D{
+				{"accountId", _accID},
+			},
+		},
+	}
+	_, err = bs.users.UpdateOne(ctx, query, updateDoc)
+	if err != nil {
+		return fmt.Errorf("could not update a user %s", userID)
+	}
+	return nil
+}
 
 func (bs Booking) DeleteUser(ctx context.Context, id string) error {
 	_id, err := primitive.ObjectIDFromHex(id)

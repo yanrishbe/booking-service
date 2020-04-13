@@ -8,17 +8,16 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/yanrishbe/booking-service/model"
 	"github.com/yanrishbe/booking-service/util"
 )
-
-const admin = "yana.strabuk@gmail.com"
 
 func createToken(email string, id string) (*util.TokenDetails, error) {
 	token := util.TokenDetails{
 		AccessExpiration: time.Now().Add(time.Minute * 3).Unix(),
 	}
 	var role string
-	if email == admin {
+	if email == model.Admin {
 		role = "admin"
 	} else {
 		role = "user"

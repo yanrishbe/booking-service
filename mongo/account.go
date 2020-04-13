@@ -42,11 +42,15 @@ func (bs Booking) UpdateAccount(ctx context.Context, account model.Account) erro
 	query := bson.M{
 		"_id": _id,
 	}
-	accountEntity, err := account.Entity()
-	if err != nil {
-		return err
+	updateDoc := bson.D{
+		{"$set",
+			bson.D{
+				{"bank", account.Bank},
+				{"amount", account.Amount},
+			},
+		},
 	}
-	_, err = bs.accounts.UpdateOne(ctx, query, accountEntity)
+	_, err = bs.accounts.UpdateOne(ctx, query, updateDoc)
 	if err != nil {
 		return fmt.Errorf("could not update an account %s", account.ID)
 	}
@@ -72,4 +76,19 @@ func (bs Booking) GetAccount(ctx context.Context, id string) (*model.Account, er
 	}
 	account := accountEntity.DTO()
 	return &account, nil
+}
+
+func (bs Booking) DeleteAccount(ctx context.Context, id string) error {
+	_id, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return fmt.Errorf("could not parse object id %s: %v", id, err)
+	}
+	query := bson.M{
+		"_id": _id,
+	}
+	_, err = bs.accounts.DeleteOne(ctx, query)
+	if err != nil {
+		return fmt.Errorf("could not delete an account %s", id)
+	}
+	return nil
 }
