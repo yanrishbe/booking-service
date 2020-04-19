@@ -22,6 +22,7 @@ func NewAccount(accountDB AccountRepository, usersDB UserRepository) *Account {
 	}
 }
 
+// todo convert money from request
 func (ac Account) Create(ctx context.Context, account model.Account, userID string) (string, error) {
 	if account.Amount < 0 {
 		return "", fmt.Errorf("insufficient funds to create an account")
@@ -48,10 +49,12 @@ func (ac Account) Create(ctx context.Context, account model.Account, userID stri
 	return accountID, nil
 }
 
+// todo return ACCOUNT RESPONSE
 func (ac Account) Get(ctx context.Context, id string) (*model.Account, error) {
 	return ac.accountsDB.GetAccount(ctx, id)
 }
 
+// todo convert money from request
 func (ac Account) Update(ctx context.Context, newAccount model.Account, accountID string, userID string) error {
 	oldAccount, err := ac.accountsDB.GetAccount(ctx, accountID)
 	if err != nil {

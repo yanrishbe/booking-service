@@ -82,6 +82,36 @@ func (bs Booking) GetAccount(ctx context.Context, id string) (*model.Account, er
 	return &account, nil
 }
 
+func (bs Booking) GetAdminAccount(ctx context.Context) (*model.Account, error) {
+	query := bson.M{
+		"email": model.Admin,
+	}
+	response := bs.users.FindOne(ctx, query)
+	if response.Err() == mongo.ErrNoDocuments {
+		return nil, nil
+	}
+	var userEntity model.UserEntity
+	err := response.Decode(&userEntity)
+	if err != nil {
+		return nil, fmt.Errorf("could not decode mongo response %v", err)
+	}
+
+	query = bson.M{
+		"_id": userEntity.AccountID,
+	}
+	response = bs.accounts.FindOne(ctx, query)
+	if response.Err() == mongo.ErrNoDocuments {
+		return nil, nil
+	}
+	var accountEntity model.AccountEntity
+	err = response.Decode(&accountEntity)
+	if err != nil {
+		return nil, fmt.Errorf("could not decode mongo response %v", err)
+	}
+	account := accountEntity.DTO()
+	return &account, nil
+}
+
 func (bs Booking) DeleteAccount(ctx context.Context, id string) error {
 	_id, err := primitive.ObjectIDFromHex(id)
 	if err != nil {

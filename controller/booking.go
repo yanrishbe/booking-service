@@ -11,17 +11,18 @@ type bookingRouter struct {
 	service Booking
 }
 
-// todo DONT FORGET TO CREATE CORRECT USERS SUBROUTER AND ADD MIDDLEWARE
-func newBookingRouter(service Booking) *bookingRouter {
+const bookingsRoute = "/{id}/bookings"
+
+func newBookingRouter(service Booking, userRouter userRouter) *bookingRouter {
 	router := bookingRouter{
-		mux.NewRouter().PathPrefix("bookingsRoute").Subrouter(),
+		userRouter.PathPrefix("").Subrouter(),
 		service,
 	}
 
-	router.Path("").Methods(http.MethodPost).HandlerFunc(router.createBooking)
-	router.Path("/{id}").Methods(http.MethodGet).HandlerFunc(router.getBooking)
-	router.Path("/{id}").Methods(http.MethodPost).HandlerFunc(router.updateBooking)
-	router.Path("/{id}").Methods(http.MethodDelete).HandlerFunc(router.deleteBooking)
+	router.Path("").Methods(http.MethodPost).HandlerFunc(validateTokenMiddleware(router.createBooking))
+	router.Path("/{id}").Methods(http.MethodGet).HandlerFunc(validateTokenMiddleware(router.getBooking))
+	router.Path("/{id}").Methods(http.MethodPost).HandlerFunc(validateTokenMiddleware(router.updateBooking))
+	router.Path("/{id}").Methods(http.MethodDelete).HandlerFunc(validateTokenMiddleware(router.deleteBooking))
 
 	return &router
 }

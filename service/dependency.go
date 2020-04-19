@@ -22,10 +22,11 @@ type AccountRepository interface {
 	GetAccount(ctx context.Context, id string) (*model.Account, error)
 	UpdateAccount(ctx context.Context, account model.Account) error
 	DeleteAccount(ctx context.Context, id string) error
+	GetAdminAccount(ctx context.Context) (*model.Account, error)
 }
 
 type BookingRepository interface {
-	DeleteBooking(ctx context.Context, id string) error
 	GetBooking(ctx context.Context, id string) (*model.Booking, error)
 	UpdateBooking(ctx context.Context, booking model.Booking) error
+	GetAllBookings(ctx context.Context) ([]model.Booking, error)
 }

@@ -9,6 +9,33 @@ import (
 	"github.com/yanrishbe/booking-service/model"
 )
 
+type GetAllBookingsResponse struct {
+	ID      string `json:"id,omitempty" bson:"_id,omitempty"`
+	Vip     bool   `json:"vip" bson:"vip"`
+	Price   string `json:"price" bson:"price"`
+	Stars   int    `json:"stars" bson:"stars"`
+	Persons int    `json:"persons" bson:"persons"`
+}
+
+func NewGetAllBookingsResponse(bookings []model.Booking) []GetAllBookingsResponse {
+	var resp []GetAllBookingsResponse
+	for i := range bookings {
+		respBooking := GetAllBookingsResponse{
+			ID:      bookings[i].ID,
+			Vip:     bookings[i].Vip,
+			Stars:   bookings[i].Stars,
+			Persons: bookings[i].Persons,
+		}
+		cents := bookings[i].Price % 100
+		rest := bookings[i].Price / 100
+		price := fmt.Sprintf("%d.%d", rest, cents)
+		respBooking.Price = price
+
+		resp = append(resp, respBooking)
+	}
+	return resp
+}
+
 type UserResponse struct {
 	*model.Account `json:"account,omitempty"`
 	*model.Booking `json:"booking,omitempty"`
@@ -51,7 +78,7 @@ func NewAccountResponse(account model.Account) *AccountResponse {
 	}
 	cents := account.Amount % 100
 	rest := account.Amount / 100
-	amount := fmt.Sprintf("%s.%s", rest, cents)
+	amount := fmt.Sprintf("%d.%d", rest, cents)
 	accResp.Amount = amount
 	return &accResp
 }
