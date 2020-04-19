@@ -47,6 +47,10 @@ func (bs Booking) UpdateAccount(ctx context.Context, account model.Account) erro
 			bson.D{
 				{"bank", account.Bank},
 				{"amount", account.Amount},
+				{"creditCard", account.CreditCard},
+				{"legalEntity", account.LegalEntity},
+				{"blocked", account.Blocked},
+				{"blockedCounter", account.BlockedCounter},
 			},
 		},
 	}

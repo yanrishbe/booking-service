@@ -30,5 +30,5 @@ type Booking interface {
 type Account interface {
 	Create(ctx context.Context, account model.Account, userID string) (string, error)
 	Get(ctx context.Context, id string) (*model.Account, error)
-	// Edit ()
+	Update(ctx context.Context, newAccount model.Account, accountID string, userID string) error
 }

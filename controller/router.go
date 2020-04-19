@@ -10,11 +10,7 @@ type API struct {
 	*mux.Router
 }
 
-const (
-	usersRoute    = "/users"
-	accountsRoute = usersRoute + "/{id}/accounts"
-	bookingsRoute = "/bookings"
-)
+const usersRoute = "/users"
 
 // NewRouter creates a router for booking-service API.
 func NewRouter(userService User, accountService Account, bookingService Booking) API {
@@ -22,14 +18,15 @@ func NewRouter(userService User, accountService Account, bookingService Booking)
 		Router: mux.NewRouter(),
 	}
 	userRouter := newUserRouter(userService)
-	accountRouter := newAccountRouter(accountService)
+	accountRouter := newAccountRouter(accountService, *userRouter)
 	bookingRouter := newBookingRouter(bookingService)
 
 	log.Println("start")
 
 	api.PathPrefix(usersRoute).Handler(userRouter)
-	api.PathPrefix(accountsRoute).Handler(accountRouter)
-	api.PathPrefix(bookingsRoute).Handler(bookingRouter)
+	api.PathPrefix(usersRoute).Handler(accountRouter)
+	//todo fix
+	api.PathPrefix("bookingsRoute").Handler(bookingRouter)
 
 	return api
 }

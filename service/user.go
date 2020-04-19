@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/yanrishbe/booking-service/model"
@@ -11,25 +12,25 @@ import (
 )
 
 type User struct {
-	userDB    UserRepository
-	accountDB AccountRepository
-	bookingDB BookingRepository
+	usersDB    UserRepository
+	accountsDB AccountRepository
+	bookingsDB BookingRepository
 }
 
 func NewUser(userDB UserRepository, accountDB AccountRepository, bookingDB BookingRepository) *User {
 	return &User{
-		userDB:    userDB,
-		accountDB: accountDB,
-		bookingDB: bookingDB,
+		usersDB:    userDB,
+		accountsDB: accountDB,
+		bookingsDB: bookingDB,
 	}
 }
 
 func (us User) Create(ctx context.Context, user model.User) (string, error) {
-	return us.userDB.CreateUser(ctx, user)
+	return us.usersDB.CreateUser(ctx, user)
 }
 
 func (us User) Login(ctx context.Context, loginRequest util.LoginRequest) (string, error) {
-	passwordAndID, err := us.userDB.GetPasswordAndID(ctx, loginRequest.Email)
+	passwordAndID, err := us.usersDB.GetPasswordAndID(ctx, loginRequest.Email)
 	if err != nil {
 		return "", err
 	}
@@ -40,20 +41,20 @@ func (us User) Login(ctx context.Context, loginRequest util.LoginRequest) (strin
 }
 
 func (us User) Get(ctx context.Context, id string) (*util.UserResponse, error) {
-	user, err := us.userDB.GetUser(ctx, id)
+	user, err := us.usersDB.GetUser(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 	var account *model.Account
 	if user.AccountID != "" {
-		account, err = us.accountDB.GetAccount(ctx, user.AccountID)
+		account, err = us.accountsDB.GetAccount(ctx, user.AccountID)
 		if err != nil {
 			return nil, err
 		}
 	}
 	var booking *model.Booking
 	if user.BookingID != "" {
-		booking, err = us.bookingDB.GetBooking(ctx, user.BookingID)
+		booking, err = us.bookingsDB.GetBooking(ctx, user.BookingID)
 		if err != nil {
 			return nil, err
 		}
@@ -62,25 +63,48 @@ func (us User) Get(ctx context.Context, id string) (*util.UserResponse, error) {
 }
 
 func (us User) Update(ctx context.Context, userRequest util.UpdateUserRequest) error {
-	return us.userDB.UpdateUser(ctx, userRequest)
+	return us.usersDB.UpdateUser(ctx, userRequest)
 }
 
 func (us User) Delete(ctx context.Context, id string) error {
-	user, err := us.userDB.GetUser(ctx, id)
+	user, err := us.usersDB.GetUser(ctx, id)
 	if err != nil {
 		return err
 	}
 	if user.AccountID != "" {
-		err = us.accountDB.DeleteAccount(ctx, user.AccountID)
+		err = us.accountsDB.DeleteAccount(ctx, user.AccountID)
 		if err != nil {
 			return err
 		}
 	}
 	if user.BookingID != "" {
-		err = us.bookingDB.DeleteBooking(ctx, user.BookingID)
+		err = us.bookingsDB.DeleteBooking(ctx, user.BookingID)
 		if err != nil {
 			return err
 		}
 	}
-	return us.userDB.DeleteUser(ctx, id)
+	return us.usersDB.DeleteUser(ctx, id)
+}
+
+// supposed to be an inner call from bookings so unexported one
+func (us User) DeleteAccount(ctx context.Context, accountID string, userID string) (int, error) {
+	account, err := us.accountsDB.GetAccount(ctx, accountID)
+	if err != nil {
+		return 0, err
+	}
+
+	user, err := us.usersDB.GetUser(ctx, userID)
+	if err != nil {
+		return 0, err
+	}
+
+	err = us.accountsDB.DeleteAccount(ctx, user.AccountID)
+	if err != nil {
+		return 0, err
+	}
+	err = us.usersDB.UpdateAccountID(ctx, primitive.NewObjectID().Hex(), userID)
+	if err != nil {
+		return 0, err
+	}
+	return account.Amount, nil
 }

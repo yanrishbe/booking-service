@@ -32,10 +32,13 @@ func (ac Account) Create(ctx context.Context, account model.Account, userID stri
 	if user.AccountID != "" && user.AccountID != primitive.NilObjectID.Hex() {
 		return "", fmt.Errorf("could not create an account: an account for the user exists")
 	}
+
+	account.UserID = userID
 	accountID, err := ac.accountsDB.CreateAccount(ctx, account)
 	if err != nil {
 		return "", err
 	}
+
 	user.AccountID = accountID
 	err = ac.usersDB.UpdateAccountID(ctx, accountID, user.ID)
 	if err != nil {
@@ -48,26 +51,29 @@ func (ac Account) Get(ctx context.Context, id string) (*model.Account, error) {
 	return ac.accountsDB.GetAccount(ctx, id)
 }
 
-// func (ac Account) Update(ctx context.Context, userRequest util.UpdateUserRequest) error {
-// 	return us.userDB.UpdateUser(ctx, userRequest)
-// }
-//
-// func (ac Account) Delete(ctx context.Context, id string) error {
-// 	user, err := us.userDB.GetUser(ctx, id)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	if user.AccountID != "" {
-// 		err = us.accountsDB.DeleteAccount(ctx, user.AccountID)
-// 		if err != nil {
-// 			return err
-// 		}
-// 	}
-// 	if user.BookingID != "" {
-// 		err = us.bookingDB.DeleteBooking(ctx, user.BookingID)
-// 		if err != nil {
-// 			return err
-// 		}
-// 	}
-// 	return us.userDB.DeleteUser(ctx, id)
-// }
+func (ac Account) Update(ctx context.Context, newAccount model.Account, accountID string, userID string) error {
+	oldAccount, err := ac.accountsDB.GetAccount(ctx, accountID)
+	if err != nil {
+		return err
+	}
+
+	switch {
+	case oldAccount.UserID != userID:
+		{
+			return fmt.Errorf("could not update account: the user does does not have enough rights")
+		}
+	case newAccount.Amount < oldAccount.Amount:
+		{
+			oldAccount.BlockedCounter++
+			if oldAccount.BlockedCounter == 10 {
+				oldAccount.Blocked = true
+			}
+			defer func() error {
+				return ac.accountsDB.UpdateAccount(ctx, *oldAccount)
+			}()
+			return fmt.Errorf("could not update account: new amount is less then the current one")
+		}
+	}
+
+	return ac.accountsDB.UpdateAccount(ctx, newAccount)
+}

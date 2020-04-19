@@ -15,25 +15,31 @@ type accountRouter struct {
 	service Account
 }
 
-func newAccountRouter(service Account) *accountRouter {
+const accountsRoute = "/{id}/accounts"
+
+func newAccountRouter(service Account, userRouter userRouter) *accountRouter {
 	router := accountRouter{
-		mux.NewRouter().PathPrefix(accountsRoute).Subrouter(),
+		userRouter.PathPrefix("").Subrouter(),
 		service,
 	}
 
-	router.Path("").Methods(http.MethodPost).HandlerFunc(router.createAccount)
-	router.Path("/{id}").Methods(http.MethodGet).HandlerFunc(router.getAccount)
-	router.Path("/{id}").Methods(http.MethodPost).HandlerFunc(router.updateAccount)
+	router.Path("").Methods(http.MethodPost).HandlerFunc(validateTokenMiddleware(router.createAccount))
+	router.Path(accountsRoute + "/{accountId}").Methods(http.MethodGet).HandlerFunc(validateTokenMiddleware(router.getAccount))
+	router.Path(accountsRoute + "/{accountId}").Methods(http.MethodPut).HandlerFunc(validateTokenMiddleware(router.updateAccount))
 
 	return &router
 }
 
 func (ar accountRouter) createAccount(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
-	validateRights(r.Context(), w, id)
+	err := validateRights(r.Context(), id)
+	if err != nil {
+		util.JSONError(http.StatusUnauthorized, w, err)
+		return
+	}
 
 	var a model.Account
-	err := json.NewDecoder(r.Body).Decode(&a)
+	err = json.NewDecoder(r.Body).Decode(&a)
 	if err != nil {
 		util.JSONError(http.StatusUnprocessableEntity, w, err)
 		return
@@ -48,8 +54,13 @@ func (ar accountRouter) createAccount(w http.ResponseWriter, r *http.Request) {
 
 func (ar accountRouter) getAccount(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
-	validateRights(r.Context(), w, id)
-	response, err := ar.service.Get(r.Context(), id)
+	err := validateRights(r.Context(), id)
+	if err != nil {
+		util.JSONError(http.StatusUnauthorized, w, err)
+		return
+	}
+	accountId := mux.Vars(r)["accountId"]
+	response, err := ar.service.Get(r.Context(), accountId)
 	if err != nil {
 		util.JSONError(http.StatusInternalServerError, w, err)
 		return
@@ -58,4 +69,25 @@ func (ar accountRouter) getAccount(w http.ResponseWriter, r *http.Request) {
 }
 
 func (ar accountRouter) updateAccount(w http.ResponseWriter, r *http.Request) {
+	id := mux.Vars(r)["id"]
+	err := validateRights(r.Context(), id)
+	if err != nil {
+		util.JSONError(http.StatusUnauthorized, w, err)
+		return
+	}
+
+	var a model.Account
+	err = json.NewDecoder(r.Body).Decode(&a)
+	if err != nil {
+		util.JSONError(http.StatusUnprocessableEntity, w, err)
+		return
+	}
+
+	accountId := mux.Vars(r)["accountId"]
+	err = ar.service.Update(r.Context(), a, accountId, id)
+	if err != nil {
+		util.JSONError(http.StatusInternalServerError, w, err)
+		return
+	}
+	w.WriteHeader(http.StatusAccepted)
 }

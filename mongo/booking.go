@@ -53,6 +53,7 @@ func (bs Booking) UpdateBooking(ctx context.Context, booking model.Booking) erro
 	return nil
 }
 
+// todo change the state of booking, don't delete from db
 func (bs Booking) DeleteBooking(ctx context.Context, id string) error {
 	_id, err := primitive.ObjectIDFromHex(id)
 	if err != nil {

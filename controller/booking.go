@@ -11,9 +11,10 @@ type bookingRouter struct {
 	service Booking
 }
 
+// todo DONT FORGET TO CREATE CORRECT USERS SUBROUTER AND ADD MIDDLEWARE
 func newBookingRouter(service Booking) *bookingRouter {
 	router := bookingRouter{
-		mux.NewRouter().PathPrefix(bookingsRoute).Subrouter(),
+		mux.NewRouter().PathPrefix("bookingsRoute").Subrouter(),
 		service,
 	}
 

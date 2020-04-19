@@ -76,9 +76,11 @@ func NewBooking(ctx context.Context) (*Booking, error) {
 	if err != nil {
 		return nil, err
 	}
+	userId := primitive.NewObjectID()
 	res, err := accounts.InsertOne(ctx, bson.D{
 		{"bank", model.AdminBank},
 		{"amount", 5000000},
+		{"userId", userId},
 	})
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create admin account%v", err)
@@ -89,6 +91,7 @@ func NewBooking(ctx context.Context) (*Booking, error) {
 		return nil, fmt.Errorf("could not hash the admin password")
 	}
 	_, err = users.InsertOne(ctx, bson.D{
+		{"_id", userId},
 		{"email", model.Admin},
 		{"password", string(hash)},
 		{"accountId", accountID},
