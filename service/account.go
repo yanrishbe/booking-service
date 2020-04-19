@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
@@ -56,24 +57,24 @@ func (ac Account) Update(ctx context.Context, newAccount model.Account, accountI
 	if err != nil {
 		return err
 	}
-
+	amount := oldAccount.Amount + newAccount.Amount
 	switch {
 	case oldAccount.UserID != userID:
 		{
 			return fmt.Errorf("could not update account: the user does does not have enough rights")
 		}
-	case newAccount.Amount < oldAccount.Amount:
+	case amount < 0:
 		{
 			oldAccount.BlockedCounter++
 			if oldAccount.BlockedCounter == 10 {
 				oldAccount.Blocked = true
 			}
-			defer func() error {
-				return ac.accountsDB.UpdateAccount(ctx, *oldAccount)
+			defer func() {
+				log.Println(ac.accountsDB.UpdateAccount(ctx, *oldAccount))
 			}()
 			return fmt.Errorf("could not update account: new amount is less then the current one")
 		}
 	}
-
+	newAccount.Amount = amount
 	return ac.accountsDB.UpdateAccount(ctx, newAccount)
 }

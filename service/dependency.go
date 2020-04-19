@@ -25,7 +25,6 @@ type AccountRepository interface {
 }
 
 type BookingRepository interface {
-	CreateBooking(ctx context.Context, booking model.Booking) (string, error)
 	DeleteBooking(ctx context.Context, id string) error
 	GetBooking(ctx context.Context, id string) (*model.Booking, error)
 	UpdateBooking(ctx context.Context, booking model.Booking) error

@@ -29,6 +29,7 @@ type Booking struct {
 
 const adminPassword = "admin"
 
+// todo add transactions may be one day
 func NewBooking(ctx context.Context) (*Booking, error) {
 	connStr, ok := os.LookupEnv("MONGO_URI")
 	if !ok {
@@ -76,6 +77,21 @@ func NewBooking(ctx context.Context) (*Booking, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	err = initDatabase(ctx, users, bookings, accounts)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Booking{
+		Database: bookingServiceDB,
+		users:    users,
+		bookings: bookings,
+		accounts: accounts,
+	}, err
+}
+
+func initDatabase(ctx context.Context, users *mongo.Collection, bookings *mongo.Collection, accounts *mongo.Collection) error {
 	userId := primitive.NewObjectID()
 	res, err := accounts.InsertOne(ctx, bson.D{
 		{"bank", model.AdminBank},
@@ -83,12 +99,12 @@ func NewBooking(ctx context.Context) (*Booking, error) {
 		{"userId", userId},
 	})
 	if err != nil {
-		return nil, fmt.Errorf("couldn't create admin account%v", err)
+		return fmt.Errorf("couldn't create admin account%v", err)
 	}
 	accountID := res.InsertedID.(primitive.ObjectID)
 	hash, err := bcrypt.GenerateFromPassword([]byte(adminPassword), 5)
 	if err != nil {
-		return nil, fmt.Errorf("could not hash the admin password")
+		return fmt.Errorf("could not hash the admin password")
 	}
 	_, err = users.InsertOne(ctx, bson.D{
 		{"_id", userId},
@@ -96,15 +112,82 @@ func NewBooking(ctx context.Context) (*Booking, error) {
 		{"password", string(hash)},
 		{"accountId", accountID},
 	})
+
 	if err != nil {
-		return nil, fmt.Errorf("couldn't create admin %v", err)
+		return fmt.Errorf("couldn't create admin %v", err)
 	}
-	return &Booking{
-		Database: bookingServiceDB,
-		users:    users,
-		bookings: bookings,
-		accounts: accounts,
-	}, err
+
+	rooms := []model.Booking{
+		{
+			Vip:     true,
+			Price:   10000,
+			Stars:   5,
+			Persons: 3,
+		},
+		{
+			Vip:     false,
+			Price:   7000,
+			Stars:   3,
+			Persons: 2,
+		},
+		{
+			Vip:     false,
+			Price:   8000,
+			Stars:   3,
+			Persons: 3,
+		},
+		{
+			Vip:     false,
+			Price:   5000,
+			Stars:   1,
+			Persons: 1,
+		},
+		{
+			Vip:     true,
+			Price:   20000,
+			Stars:   5,
+			Persons: 2,
+		},
+		{
+			Vip:     true,
+			Price:   12000,
+			Stars:   4,
+			Persons: 2,
+		},
+		{
+			Vip:     false,
+			Price:   6500,
+			Stars:   3,
+			Persons: 3,
+		},
+		{
+			Vip:     false,
+			Price:   7500,
+			Stars:   3,
+			Persons: 1,
+		},
+		{
+			Vip:     false,
+			Price:   10000,
+			Stars:   4,
+			Persons: 4,
+		},
+		{
+			Vip:     true,
+			Price:   19000,
+			Stars:   5,
+			Persons: 2,
+		},
+	}
+	interfaceList := make([]interface{}, len(rooms))
+	for i := range rooms {
+		interfaceList[i] = rooms[i]
+	}
+	_, err = bookings.InsertMany(ctx, interfaceList)
+	if err != nil {
+		return fmt.Errorf("couldn't create a booking %v", err)
+	}
+	return nil
 }
 
 func (bs Booking) CreateUser(ctx context.Context, user model.User) (string, error) {

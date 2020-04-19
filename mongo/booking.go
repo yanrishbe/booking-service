@@ -11,29 +11,6 @@ import (
 	"github.com/yanrishbe/booking-service/model"
 )
 
-func (bs Booking) CreateBooking(ctx context.Context, booking model.Booking) (string, error) {
-	_id, err := primitive.ObjectIDFromHex(booking.ID)
-	if err != nil {
-		return "", fmt.Errorf("could not parse object id %s: %v", booking.ID, err)
-	}
-	query := bson.M{
-		"_id": _id,
-	}
-	count, err := bs.bookings.CountDocuments(ctx, query)
-	if err != nil {
-		return "", fmt.Errorf("count error %v", err)
-	}
-	if count > 0 {
-		return "", fmt.Errorf("booking already exists %s", booking.ID)
-	}
-	res, err := bs.bookings.InsertOne(ctx, booking)
-	if err != nil {
-		return "", fmt.Errorf("couldn't create a booking %s: %v", booking.ID, err)
-	}
-
-	return res.InsertedID.(primitive.ObjectID).Hex(), nil
-}
-
 func (bs Booking) UpdateBooking(ctx context.Context, booking model.Booking) error {
 	_id, err := primitive.ObjectIDFromHex(booking.ID)
 	if err != nil {

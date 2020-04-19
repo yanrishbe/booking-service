@@ -29,7 +29,7 @@ func createToken(email string, id string) (*util.TokenDetails, error) {
 	}
 	at := jwt.NewWithClaims(jwt.SigningMethodHS256, atClaims)
 	standardClaims := at.Claims.(jwt.MapClaims)
-	standardClaims["exp"] = time.Now().Add(time.Minute * 3).Unix()
+	standardClaims["exp"] = time.Now().Add(time.Hour * 24).Unix()
 	var err error
 	token.AccessToken, err = at.SignedString([]byte(os.Getenv("ACCESS_SECRET")))
 	token.Role = role

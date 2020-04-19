@@ -23,7 +23,6 @@ type Booking interface {
 	// Get ()
 	// GetAll()
 	// Delete()
-	// DeleteAll()
 }
 
 // Account defines interface for account-related CRU operations.
