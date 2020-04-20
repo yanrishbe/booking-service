@@ -66,15 +66,21 @@ func NewUserResponse(user *model.User, account *model.Account, booking *model.Bo
 }
 
 type AccountResponse struct {
-	ID     string `json:"id,omitempty"`
-	Bank   string `json:"bank"`
-	Amount string `json:"amount"`
+	ID          string `json:"id,omitempty"`
+	UserID      string `json:"userId" bson:"userId"`
+	CreditCard  bool   `json:"creditCard" bson:"creditCard"`
+	LegalEntity bool   `json:"legalEntity" bson:"legalEntity"`
+	Bank        string `json:"bank"`
+	Amount      string `json:"amount"`
 }
 
 func NewAccountResponse(account model.Account) *AccountResponse {
 	accResp := AccountResponse{
-		ID:   account.ID,
-		Bank: account.Bank,
+		ID:          account.ID,
+		UserID:      account.UserID,
+		CreditCard:  account.CreditCard,
+		LegalEntity: account.LegalEntity,
+		Bank:        account.Bank,
 	}
 	cents := account.Amount % 100
 	rest := account.Amount / 100

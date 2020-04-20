@@ -206,7 +206,11 @@ func (bs Booking) CreateUser(ctx context.Context, user model.User) (string, erro
 	if count > 0 {
 		return "", fmt.Errorf("login already exists %s", user.Email)
 	}
-	res, err := bs.users.InsertOne(ctx, user)
+	entity, err := user.Entity()
+	if err != nil {
+		return "", err
+	}
+	res, err := bs.users.InsertOne(ctx, entity)
 	if err != nil {
 		return "", fmt.Errorf("couldn't create a user %s: %v", user.Email, err)
 	}

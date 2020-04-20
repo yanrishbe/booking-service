@@ -12,21 +12,11 @@ import (
 )
 
 func (bs Booking) CreateAccount(ctx context.Context, account model.Account) (string, error) {
-	_id, err := primitive.ObjectIDFromHex(account.ID)
+	entity, err := account.Entity()
 	if err != nil {
-		return "", fmt.Errorf("could not parse object id %s: %v", account.ID, err)
+		return "", err
 	}
-	query := bson.M{
-		"_id": _id,
-	}
-	count, err := bs.accounts.CountDocuments(ctx, query)
-	if err != nil {
-		return "", fmt.Errorf("count error %v", err)
-	}
-	if count > 0 {
-		return "", fmt.Errorf("account already exists %s", account.ID)
-	}
-	res, err := bs.accounts.InsertOne(ctx, account)
+	res, err := bs.accounts.InsertOne(ctx, entity)
 	if err != nil {
 		return "", fmt.Errorf("couldn't create an account %s: %v", account.ID, err)
 	}

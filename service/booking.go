@@ -79,7 +79,7 @@ func (bk Booking) GetAll(ctx context.Context) ([]util.GetAllBookingsResponse, er
 	return resp, nil
 }
 
-// todo update and delete
+// todo update and delete and return delete user func
 // func (ac Account) Update(ctx context.Context, newAccount model.Account, accountID string, userID string) error {
 // 	oldAccount, err := ac.accountsDB.GetAccount(ctx, accountID)
 // 	if err != nil {

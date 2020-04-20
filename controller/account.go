@@ -6,7 +6,6 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/yanrishbe/booking-service/model"
 	"github.com/yanrishbe/booking-service/util"
 )
 
@@ -23,7 +22,7 @@ func newAccountRouter(service Account, userRouter userRouter) *accountRouter {
 		service,
 	}
 
-	router.Path("").Methods(http.MethodPost).HandlerFunc(validateTokenMiddleware(router.createAccount))
+	router.Path(accountsRoute).Methods(http.MethodPost).HandlerFunc(validateTokenMiddleware(router.createAccount))
 	router.Path(accountsRoute + "/{accountId}").Methods(http.MethodGet).HandlerFunc(validateTokenMiddleware(router.getAccount))
 	router.Path(accountsRoute + "/{accountId}").Methods(http.MethodPut).HandlerFunc(validateTokenMiddleware(router.updateAccount))
 
@@ -38,7 +37,7 @@ func (ar accountRouter) createAccount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var a model.Account
+	var a util.AccountRequest
 	err = json.NewDecoder(r.Body).Decode(&a)
 	if err != nil {
 		util.JSONError(http.StatusUnprocessableEntity, w, err)
@@ -76,7 +75,7 @@ func (ar accountRouter) updateAccount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var a model.Account
+	var a util.AccountRequest
 	err = json.NewDecoder(r.Body).Decode(&a)
 	if err != nil {
 		util.JSONError(http.StatusUnprocessableEntity, w, err)

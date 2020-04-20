@@ -5,9 +5,8 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/yanrishbe/booking-service/util"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-
-	"github.com/yanrishbe/booking-service/model"
 )
 
 type Account struct {
@@ -22,8 +21,12 @@ func NewAccount(accountDB AccountRepository, usersDB UserRepository) *Account {
 	}
 }
 
-// todo convert money from request
-func (ac Account) Create(ctx context.Context, account model.Account, userID string) (string, error) {
+func (ac Account) Create(ctx context.Context, accountRequest util.AccountRequest, userID string) (string, error) {
+	account, err := util.AccountFromRequest(accountRequest)
+	if err != nil {
+		return "", err
+	}
+
 	if account.Amount < 0 {
 		return "", fmt.Errorf("insufficient funds to create an account")
 	}
@@ -31,12 +34,15 @@ func (ac Account) Create(ctx context.Context, account model.Account, userID stri
 	if err != nil {
 		return "", err
 	}
+	if user == nil {
+		return "", fmt.Errorf("the user does not exist")
+	}
 	if user.AccountID != "" && user.AccountID != primitive.NilObjectID.Hex() {
 		return "", fmt.Errorf("could not create an account: an account for the user exists")
 	}
 
 	account.UserID = userID
-	accountID, err := ac.accountsDB.CreateAccount(ctx, account)
+	accountID, err := ac.accountsDB.CreateAccount(ctx, *account)
 	if err != nil {
 		return "", err
 	}
@@ -49,13 +55,21 @@ func (ac Account) Create(ctx context.Context, account model.Account, userID stri
 	return accountID, nil
 }
 
-// todo return ACCOUNT RESPONSE
-func (ac Account) Get(ctx context.Context, id string) (*model.Account, error) {
-	return ac.accountsDB.GetAccount(ctx, id)
+func (ac Account) Get(ctx context.Context, id string) (*util.AccountResponse, error) {
+	account, err := ac.accountsDB.GetAccount(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	accResponse := util.NewAccountResponse(*account)
+	return accResponse, nil
 }
 
-// todo convert money from request
-func (ac Account) Update(ctx context.Context, newAccount model.Account, accountID string, userID string) error {
+func (ac Account) Update(ctx context.Context, newAccountReq util.AccountRequest, accountID string, userID string) error {
+	newAccount, err := util.AccountFromRequest(newAccountReq)
+	if err != nil {
+		return err
+	}
+
 	oldAccount, err := ac.accountsDB.GetAccount(ctx, accountID)
 	if err != nil {
 		return err
@@ -79,5 +93,6 @@ func (ac Account) Update(ctx context.Context, newAccount model.Account, accountI
 		}
 	}
 	newAccount.Amount = amount
-	return ac.accountsDB.UpdateAccount(ctx, newAccount)
+	newAccount.ID = oldAccount.ID
+	return ac.accountsDB.UpdateAccount(ctx, *newAccount)
 }

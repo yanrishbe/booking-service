@@ -66,25 +66,26 @@ func (us User) Update(ctx context.Context, userRequest util.UpdateUserRequest) e
 	return us.usersDB.UpdateUser(ctx, userRequest)
 }
 
-func (us User) Delete(ctx context.Context, id string) error {
-	user, err := us.usersDB.GetUser(ctx, id)
-	if err != nil {
-		return err
-	}
-	if user.AccountID != "" {
-		err = us.accountsDB.DeleteAccount(ctx, user.AccountID)
-		if err != nil {
-			return err
-		}
-	}
-	if user.BookingID != "" {
-		err = us.bookingsDB.DeleteBooking(ctx, user.BookingID)
-		if err != nil {
-			return err
-		}
-	}
-	return us.usersDB.DeleteUser(ctx, id)
-}
+// todo update delete booking
+// func (us User) Delete(ctx context.Context, id string) error {
+// 	user, err := us.usersDB.GetUser(ctx, id)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	if user.AccountID != "" {
+// 		err = us.accountsDB.DeleteAccount(ctx, user.AccountID)
+// 		if err != nil {
+// 			return err
+// 		}
+// 	}
+// 	if user.BookingID != "" {
+// 		err = us.bookingsDB.DeleteBooking(ctx, user.BookingID)
+// 		if err != nil {
+// 			return err
+// 		}
+// 	}
+// 	return us.usersDB.DeleteUser(ctx, id)
+// }
 
 // supposed to be an inner call from bookings so unexported one
 func (us User) DeleteAccount(ctx context.Context, accountID string, userID string) (int, error) {

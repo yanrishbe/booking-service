@@ -19,13 +19,12 @@ func NewRouter(userService User, accountService Account, bookingService Booking)
 	}
 	userRouter := newUserRouter(userService)
 	accountRouter := newAccountRouter(accountService, *userRouter)
-	bookingRouter := newBookingRouter(bookingService)
+	bookingRouter := newBookingRouter(bookingService, *userRouter)
 
 	log.Println("start")
 
 	api.PathPrefix(usersRoute).Handler(userRouter)
 	api.PathPrefix(usersRoute).Handler(accountRouter)
-	//todo fix
 	api.PathPrefix("bookingsRoute").Handler(bookingRouter)
 
 	return api

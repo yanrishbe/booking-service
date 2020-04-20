@@ -23,17 +23,21 @@ type UpdateUserRequest struct {
 }
 
 type AccountRequest struct {
-	ID     string `json:"id,omitempty"`
-	Bank   string `json:"bank"`
-	Amount string `json:"amount"`
+	ID          string `json:"id,omitempty"`
+	CreditCard  bool   `json:"creditCard" bson:"creditCard"`
+	LegalEntity bool   `json:"legalEntity" bson:"legalEntity"`
+	Bank        string `json:"bank"`
+	Amount      string `json:"amount"`
 }
 
 func AccountFromRequest(req AccountRequest) (*model.Account, error) {
 	acc := model.Account{
-		ID:   req.ID,
-		Bank: req.Bank,
+		ID:          req.ID,
+		Bank:        req.Bank,
+		CreditCard:  req.CreditCard,
+		LegalEntity: req.LegalEntity,
 	}
-	amount := strings.Split(req.Amount, ",")
+	amount := strings.Split(req.Amount, ".")
 	var cents int
 	var err error
 	if len(amount) == 0 {
@@ -49,6 +53,11 @@ func AccountFromRequest(req AccountRequest) (*model.Account, error) {
 	if err != nil {
 		return nil, fmt.Errorf("could not convert main: %v", err)
 	}
-	acc.Amount = main*100 + cents
+	if main < 0 {
+		acc.Amount = main*100 - cents
+
+	} else {
+		acc.Amount = main*100 + cents
+	}
 	return &acc, nil
 }

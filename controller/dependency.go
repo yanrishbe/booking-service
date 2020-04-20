@@ -12,7 +12,7 @@ type User interface {
 	Create(ctx context.Context, user model.User) (string, error)
 	Login(ctx context.Context, loginRequest util.LoginRequest) (string, error)
 	Get(ctx context.Context, id string) (*util.UserResponse, error)
-	Delete(ctx context.Context, id string) error
+	// Delete(ctx context.Context, id string) error
 	Update(ctx context.Context, userRequest util.UpdateUserRequest) error
 }
 
@@ -27,7 +27,7 @@ type Booking interface {
 
 // Account defines interface for account-related CRU operations.
 type Account interface {
-	Create(ctx context.Context, account model.Account, userID string) (string, error)
-	Get(ctx context.Context, id string) (*model.Account, error)
-	Update(ctx context.Context, newAccount model.Account, accountID string, userID string) error
+	Create(ctx context.Context, accountRequest util.AccountRequest, userID string) (string, error)
+	Get(ctx context.Context, id string) (*util.AccountResponse, error)
+	Update(ctx context.Context, newAccountReq util.AccountRequest, accountID string, userID string) error
 }

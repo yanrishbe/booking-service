@@ -33,7 +33,7 @@ func main() {
 
 	// create service layer
 	userService := service.NewUser(db, db, db)
-	bookingService := service.NewBooking(db)
+	bookingService := service.NewBooking(db, db, db)
 	accountService := service.NewAccount(db, db)
 
 	stop := make(chan os.Signal, 1)
