@@ -23,29 +23,30 @@ func NewBooking(bookingsDB BookingRepository, accountsDB AccountRepository, user
 	}
 }
 
-func (bk Booking) Create(ctx context.Context, newBooking model.Booking, userID string) error {
+func (bk Booking) Create(ctx context.Context, newBookingReq util.BookingRequest, userID string) error {
 	user, err := bk.usersDB.GetUser(ctx, userID)
 	if err != nil {
 		return err
 	}
+
 	account, err := bk.accountsDB.GetAccount(ctx, user.AccountID)
 	if err != nil {
 		return err
 	}
-	price := newBooking.Price * newBooking.MaxDays
-	if account.Amount < price {
-		return fmt.Errorf("insufficient funds to book an apartment")
-	}
-	oldBooking, err := bk.bookingsDB.GetBooking(ctx, newBooking.ID)
+
+	oldBooking, err := bk.bookingsDB.GetBooking(ctx, newBookingReq.ID)
 	if err != nil {
 		return err
 	}
+
+	price := oldBooking.Price * newBookingReq.MaxDays
+	if account.Amount < price {
+		return fmt.Errorf("insufficient funds to book an apartment")
+	}
+
 	if !oldBooking.Empty {
 		return fmt.Errorf("the apartment is already booked")
 	}
-	newBooking.Empty = false
-	expirationTime := time.Now().AddDate(0, 0, newBooking.MaxDays)
-	newBooking.Expiration = &expirationTime
 
 	account.Amount -= price
 	err = bk.accountsDB.UpdateAccount(ctx, *account)
@@ -58,14 +59,26 @@ func (bk Booking) Create(ctx context.Context, newBooking model.Booking, userID s
 		return err
 	}
 	adminAccount.Amount += price
-	err = bk.accountsDB.UpdateAccount(ctx, *account)
+	err = bk.accountsDB.UpdateAccount(ctx, *adminAccount)
 	if err != nil {
 		return err
 	}
 
-	return bk.bookingsDB.UpdateBooking(ctx, newBooking)
+	expirationTime := time.Now().AddDate(0, 0, newBookingReq.MaxDays)
+	return bk.bookingsDB.UpdateBooking(ctx, model.Booking{
+		ID:         oldBooking.ID,
+		Vip:        oldBooking.Vip,
+		Price:      oldBooking.Price,
+		Stars:      oldBooking.Stars,
+		Persons:    oldBooking.Persons,
+		Empty:      false,
+		UserID:     &userID,
+		Expiration: &expirationTime,
+		MaxDays:    newBookingReq.MaxDays,
+	})
 }
 
+// todo fix this
 func (bk Booking) Get(ctx context.Context, id string) (*model.Booking, error) {
 	return bk.bookingsDB.GetBooking(ctx, id)
 }

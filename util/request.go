@@ -61,3 +61,8 @@ func AccountFromRequest(req AccountRequest) (*model.Account, error) {
 	}
 	return &acc, nil
 }
+
+type BookingRequest struct {
+	ID      string `json:"id,omitempty" bson:"_id,omitempty"`
+	MaxDays int    `json:"maxDays" bson:"maxDays"`
+}

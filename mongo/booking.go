@@ -20,16 +20,20 @@ func (bs Booking) UpdateBooking(ctx context.Context, booking model.Booking) erro
 	query := bson.M{
 		"_id": _id,
 	}
+	entity, err := booking.Entity()
+	if err != nil {
+		return err
+	}
 	updateDoc := bson.D{
 		{"$set",
 			bson.D{
-				{"vip", booking.Vip},
-				{"price", booking.Price},
-				{"stars", booking.Persons},
-				{"empty", booking.Empty},
-				{"userId", booking.UserID},
-				{"expiration", booking.Expiration},
-				{"maxDays", booking.MaxDays},
+				{"vip", entity.Vip},
+				{"price", entity.Price},
+				{"stars", entity.Persons},
+				{"empty", entity.Empty},
+				{"userId", entity.UserID},
+				{"expiration", entity.Expiration},
+				{"maxDays", entity.MaxDays},
 			},
 		},
 	}
