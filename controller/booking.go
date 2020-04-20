@@ -88,4 +88,17 @@ func (br bookingRouter) updateBooking(w http.ResponseWriter, r *http.Request) {
 }
 
 func (br bookingRouter) deleteBooking(w http.ResponseWriter, r *http.Request) {
+	id := mux.Vars(r)["id"]
+	err := validateRights(r.Context(), id)
+	if err != nil {
+		util.JSONError(http.StatusUnauthorized, w, err)
+		return
+	}
+	bookingId := mux.Vars(r)["bookingId"]
+	err = br.service.Delete(r.Context(), bookingId, id)
+	if err != nil {
+		util.JSONError(http.StatusInternalServerError, w, err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }

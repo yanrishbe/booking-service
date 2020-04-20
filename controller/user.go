@@ -105,18 +105,18 @@ func (ur userRouter) updateUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (ur userRouter) deleteUser(w http.ResponseWriter, r *http.Request) {
-	// id := mux.Vars(r)["id"]
-	// err := validateRights(r.Context(), id)
-	// if err != nil {
-	// 	util.JSONError(http.StatusUnauthorized, w, err)
-	// 	return
-	// }
-	// err = ur.service.Delete(r.Context(), id)
-	// if err != nil {
-	// 	util.JSONError(http.StatusInternalServerError, w, err)
-	// 	return
-	// }
-	// w.WriteHeader(http.StatusNoContent)
+	id := mux.Vars(r)["id"]
+	err := validateRights(r.Context(), id)
+	if err != nil {
+		util.JSONError(http.StatusUnauthorized, w, err)
+		return
+	}
+	err = ur.service.Delete(r.Context(), id)
+	if err != nil {
+		util.JSONError(http.StatusInternalServerError, w, err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func validateRights(ctx context.Context, id string) error {

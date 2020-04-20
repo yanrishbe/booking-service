@@ -316,10 +316,16 @@ func (bs Booking) UpdateAccountID(ctx context.Context, accID string, userID stri
 	if err != nil {
 		return fmt.Errorf("could not parse object id %s: %v", userID, err)
 	}
-	_accID, err := primitive.ObjectIDFromHex(accID)
-	if err != nil {
-		return fmt.Errorf("could not parse object id %s: %v", accID, err)
+
+	var _accID *primitive.ObjectID
+	if accID != "" {
+		val, err := primitive.ObjectIDFromHex(accID)
+		if err != nil {
+			return fmt.Errorf("could not parse object id %s: %v", accID, err)
+		}
+		_accID = &val
 	}
+
 	query := bson.M{
 		"_id": _id,
 	}
@@ -332,7 +338,37 @@ func (bs Booking) UpdateAccountID(ctx context.Context, accID string, userID stri
 	}
 	_, err = bs.users.UpdateOne(ctx, query, updateDoc)
 	if err != nil {
-		return fmt.Errorf("could not update a user %s", userID)
+		return fmt.Errorf("could not update user's accountId %s", userID)
+	}
+	return nil
+}
+
+func (bs Booking) UpdateBookingID(ctx context.Context, bookID string, userID string) error {
+	_id, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return fmt.Errorf("could not parse object id %s: %v", userID, err)
+	}
+	var _bookID *primitive.ObjectID
+	if bookID != "" {
+		val, err := primitive.ObjectIDFromHex(bookID)
+		if err != nil {
+			return fmt.Errorf("could not parse object id %s: %v", bookID, err)
+		}
+		_bookID = &val
+	}
+	query := bson.M{
+		"_id": _id,
+	}
+	updateDoc := bson.D{
+		{"$set",
+			bson.D{
+				{"bookingId", _bookID},
+			},
+		},
+	}
+	_, err = bs.users.UpdateOne(ctx, query, updateDoc)
+	if err != nil {
+		return fmt.Errorf("could not update user's bookingId %s", userID)
 	}
 	return nil
 }

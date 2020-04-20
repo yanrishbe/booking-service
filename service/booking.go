@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"fmt"
-	"math"
 	"time"
 
 	"github.com/yanrishbe/booking-service/model"
@@ -66,6 +65,11 @@ func (bk Booking) Create(ctx context.Context, newBookingReq util.BookingRequest,
 		return err
 	}
 
+	err = bk.usersDB.UpdateBookingID(ctx, newBookingReq.ID, userID)
+	if err != nil {
+		return err
+	}
+
 	expirationTime := time.Now().AddDate(0, 0, newBookingReq.MaxDays)
 	return bk.bookingsDB.UpdateBooking(ctx, model.Booking{
 		ID:         oldBooking.ID,
@@ -93,16 +97,31 @@ func (bk Booking) GetAll(ctx context.Context) ([]util.GetAllBookingsResponse, er
 	return resp, nil
 }
 
-// todo update and delete and return delete user func
+// todo return refund for the expired bookings
 func (bk Booking) Delete(ctx context.Context, bookingID string, userID string) error {
 	oldBooking, err := bk.bookingsDB.GetBooking(ctx, bookingID)
 	if err != nil {
 		return err
 	}
-	if oldBooking.Expiration.After(time.Now()) {
-		days := math.Floor(oldBooking.Expiration.Sub(time.Now()).Hours() / 24)
-		refund := int(days) * oldBooking.Price
-
+	err = bk.bookingsDB.UpdateBooking(ctx, model.Booking{
+		ID:         oldBooking.ID,
+		Vip:        oldBooking.Vip,
+		Price:      oldBooking.Price,
+		Stars:      oldBooking.Stars,
+		Persons:    oldBooking.Persons,
+		Empty:      true,
+		UserID:     nil,
+		Expiration: nil,
+		MaxDays:    0,
+	})
+	if err != nil {
+		return err
 	}
-	return ac.accountsDB.UpdateAccount(ctx, newAccount)
+
+	err = bk.usersDB.UpdateBookingID(ctx, "", userID)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

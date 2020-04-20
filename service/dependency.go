@@ -15,6 +15,7 @@ type UserRepository interface {
 	DeleteUser(ctx context.Context, id string) error
 	GetUser(ctx context.Context, id string) (*model.User, error)
 	UpdateAccountID(ctx context.Context, accID string, userID string) error
+	UpdateBookingID(ctx context.Context, bookID string, userID string) error
 }
 
 type AccountRepository interface {
