@@ -85,6 +85,27 @@ func (br bookingRouter) getAllBookings(w http.ResponseWriter, r *http.Request) {
 }
 
 func (br bookingRouter) updateBooking(w http.ResponseWriter, r *http.Request) {
+	id := mux.Vars(r)["id"]
+	err := validateRights(r.Context(), id)
+	if err != nil {
+		util.JSONError(http.StatusUnauthorized, w, err)
+		return
+	}
+
+	var b util.BookingRequest
+	err = json.NewDecoder(r.Body).Decode(&b)
+	if err != nil {
+		util.JSONError(http.StatusUnprocessableEntity, w, err)
+		return
+	}
+
+	bookingID := mux.Vars(r)["bookingId"]
+	err = br.service.Update(r.Context(), b, bookingID, id)
+	if err != nil {
+		util.JSONError(http.StatusInternalServerError, w, err)
+		return
+	}
+	w.WriteHeader(http.StatusAccepted)
 }
 
 func (br bookingRouter) deleteBooking(w http.ResponseWriter, r *http.Request) {

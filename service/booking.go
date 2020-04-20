@@ -125,3 +125,59 @@ func (bk Booking) Delete(ctx context.Context, bookingID string, userID string) e
 
 	return nil
 }
+
+func (bk Booking) Update(ctx context.Context, newBookingReq util.BookingRequest, bookingID string, userID string) error {
+	user, err := bk.usersDB.GetUser(ctx, userID)
+	if err != nil {
+		return err
+	}
+
+	account, err := bk.accountsDB.GetAccount(ctx, user.AccountID)
+	if err != nil {
+		return err
+	}
+
+	oldBooking, err := bk.bookingsDB.GetBooking(ctx, bookingID)
+	if err != nil {
+		return err
+	}
+
+	price := oldBooking.Price * newBookingReq.MaxDays
+	if account.Amount < price {
+		return fmt.Errorf("insufficient funds to update the booking")
+	}
+
+	account.Amount -= price
+	err = bk.accountsDB.UpdateAccount(ctx, *account)
+	if err != nil {
+		return err
+	}
+
+	adminAccount, err := bk.accountsDB.GetAdminAccount(ctx)
+	if err != nil {
+		return err
+	}
+	adminAccount.Amount += price
+	err = bk.accountsDB.UpdateAccount(ctx, *adminAccount)
+	if err != nil {
+		return err
+	}
+
+	err = bk.usersDB.UpdateBookingID(ctx, newBookingReq.ID, userID)
+	if err != nil {
+		return err
+	}
+
+	expirationTime := time.Now().AddDate(0, 0, newBookingReq.MaxDays)
+	return bk.bookingsDB.UpdateBooking(ctx, model.Booking{
+		ID:         oldBooking.ID,
+		Vip:        oldBooking.Vip,
+		Price:      oldBooking.Price,
+		Stars:      oldBooking.Stars,
+		Persons:    oldBooking.Persons,
+		Empty:      false,
+		UserID:     &userID,
+		Expiration: &expirationTime,
+		MaxDays:    newBookingReq.MaxDays,
+	})
+}

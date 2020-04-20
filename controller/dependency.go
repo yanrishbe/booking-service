@@ -19,7 +19,7 @@ type User interface {
 // Booking defines interface for booking-related CRUD operations.
 type Booking interface {
 	Create(ctx context.Context, newBookingReq util.BookingRequest, userID string) error
-	// Edit ()
+	Update(ctx context.Context, newBookingReq util.BookingRequest, bookingID string, userID string) error
 	Get(ctx context.Context, id string) (*model.Booking, error)
 	GetAll(ctx context.Context) ([]util.GetAllBookingsResponse, error)
 	Delete(ctx context.Context, bookingID string, userID string) error

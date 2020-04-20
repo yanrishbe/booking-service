@@ -23,15 +23,14 @@ func init() {
 	}
 }
 
+// todo add watcher to remove expired bookings
 func main() {
 	ctx := context.Background()
-	// connect to db
 	db, err := mongo.NewBooking(ctx)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	// create service layer
 	userService := service.NewUser(db, db, db)
 	bookingService := service.NewBooking(db, db, db)
 	accountService := service.NewAccount(db, db)
