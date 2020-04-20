@@ -80,7 +80,7 @@ func (bs Booking) GetAllBookings(ctx context.Context) ([]model.Booking, error) {
 		bookingEntities = append(bookingEntities, bookingEntity)
 	}
 	defer func() {
-		log.Fatalln(cur.Close(ctx))
+		log.Println(cur.Close(ctx))
 	}()
 	err = cur.Err()
 	if err != nil {

@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"math"
 	"time"
 
 	"github.com/yanrishbe/booking-service/model"
@@ -23,6 +24,7 @@ func NewBooking(bookingsDB BookingRepository, accountsDB AccountRepository, user
 	}
 }
 
+// todo add booking for a date not from today
 func (bk Booking) Create(ctx context.Context, newBookingReq util.BookingRequest, userID string) error {
 	user, err := bk.usersDB.GetUser(ctx, userID)
 	if err != nil {
@@ -78,7 +80,6 @@ func (bk Booking) Create(ctx context.Context, newBookingReq util.BookingRequest,
 	})
 }
 
-// todo fix this
 func (bk Booking) Get(ctx context.Context, id string) (*model.Booking, error) {
 	return bk.bookingsDB.GetBooking(ctx, id)
 }
@@ -93,29 +94,15 @@ func (bk Booking) GetAll(ctx context.Context) ([]util.GetAllBookingsResponse, er
 }
 
 // todo update and delete and return delete user func
-// func (ac Account) Update(ctx context.Context, newAccount model.Account, accountID string, userID string) error {
-// 	oldAccount, err := ac.accountsDB.GetAccount(ctx, accountID)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	amount := oldAccount.Amount + newAccount.Amount
-// 	switch {
-// 	case oldAccount.UserID != userID:
-// 		{
-// 			return fmt.Errorf("could not update account: the user does does not have enough rights")
-// 		}
-// 	case amount < 0:
-// 		{
-// 			oldAccount.BlockedCounter++
-// 			if oldAccount.BlockedCounter == 10 {
-// 				oldAccount.Blocked = true
-// 			}
-// 			defer func() {
-// 				log.Println(ac.accountsDB.UpdateAccount(ctx, *oldAccount))
-// 			}()
-// 			return fmt.Errorf("could not update account: new amount is less then the current one")
-// 		}
-// 	}
-// 	newAccount.Amount = amount
-// 	return ac.accountsDB.UpdateAccount(ctx, newAccount)
-// }
+func (bk Booking) Delete(ctx context.Context, bookingID string, userID string) error {
+	oldBooking, err := bk.bookingsDB.GetBooking(ctx, bookingID)
+	if err != nil {
+		return err
+	}
+	if oldBooking.Expiration.After(time.Now()) {
+		days := math.Floor(oldBooking.Expiration.Sub(time.Now()).Hours() / 24)
+		refund := int(days) * oldBooking.Price
+
+	}
+	return ac.accountsDB.UpdateAccount(ctx, newAccount)
+}

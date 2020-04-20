@@ -117,7 +117,7 @@ func initDatabase(ctx context.Context, users *mongo.Collection, bookings *mongo.
 		return fmt.Errorf("couldn't create admin %v", err)
 	}
 
-	rooms := []model.Booking{
+	rooms := []model.BookingEntity{
 		{
 			Vip:     true,
 			Empty:   true,
