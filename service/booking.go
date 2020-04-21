@@ -168,7 +168,7 @@ func (bk Booking) Update(ctx context.Context, newBookingReq util.BookingRequest,
 		return err
 	}
 
-	expirationTime := time.Now().AddDate(0, 0, newBookingReq.MaxDays)
+	expirationTime := oldBooking.Expiration.AddDate(0, 0, newBookingReq.MaxDays)
 	return bk.bookingsDB.UpdateBooking(ctx, model.Booking{
 		ID:         oldBooking.ID,
 		Vip:        oldBooking.Vip,

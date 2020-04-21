@@ -25,7 +25,7 @@ func newBookingRouter(service Booking, userRouter userRouter) *bookingRouter {
 	router.Path(bookingsRoute).Methods(http.MethodPost).HandlerFunc(validateTokenMiddleware(router.createBooking))
 	router.Path(bookingsRoute).Methods(http.MethodGet).HandlerFunc(validateTokenMiddleware(router.getAllBookings))
 	router.Path(bookingsRoute + "/{bookingId}").Methods(http.MethodGet).HandlerFunc(validateTokenMiddleware(router.getBooking))
-	router.Path(bookingsRoute + "/{bookingId}").Methods(http.MethodPost).HandlerFunc(validateTokenMiddleware(router.updateBooking))
+	router.Path(bookingsRoute + "/{bookingId}").Methods(http.MethodPut).HandlerFunc(validateTokenMiddleware(router.updateBooking))
 	router.Path(bookingsRoute + "/{bookingId}").Methods(http.MethodDelete).HandlerFunc(validateTokenMiddleware(router.deleteBooking))
 
 	return &router
