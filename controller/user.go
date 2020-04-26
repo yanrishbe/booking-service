@@ -44,7 +44,10 @@ func (ur userRouter) createUser(w http.ResponseWriter, r *http.Request) {
 		util.JSONError(http.StatusInternalServerError, w, err)
 		return
 	}
-	util.JSON(w, id)
+	type idUser struct {
+		ID string `json:"userId"`
+	}
+	util.JSON(w, idUser{ID: id})
 }
 
 func (ur userRouter) loginUser(w http.ResponseWriter, r *http.Request) {

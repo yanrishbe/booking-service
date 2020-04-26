@@ -90,7 +90,8 @@ func NewAccountResponse(account model.Account) *AccountResponse {
 }
 
 type TokenDetails struct {
-	AccessToken       string `json:"access_token"`
+	UserID            string `json:"userId"`
+	AccessToken       string `json:"token"`
 	Role              string `json:"role"`
 	AccessExpiration  int64  `json:"access_expiration"`
 	AccessUuid        string `json:"access_uuid,omitempty"`
@@ -104,7 +105,6 @@ type ErrorMessage struct {
 }
 
 func JSON(w http.ResponseWriter, i interface{}) {
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	err := json.NewEncoder(w).Encode(i)
 	if err != nil {
 		log.Println("encoding error")
@@ -114,7 +114,6 @@ func JSON(w http.ResponseWriter, i interface{}) {
 
 func JSONError(code int, w http.ResponseWriter, err error) {
 	w.WriteHeader(code)
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	err = json.NewEncoder(w).Encode(ErrorMessage{
 		Error: err.Error(),
 	})

@@ -14,7 +14,8 @@ import (
 
 func createToken(email string, id string) (*util.TokenDetails, error) {
 	token := util.TokenDetails{
-		AccessExpiration: time.Now().Add(time.Minute * 3).Unix(),
+		AccessExpiration: time.Now().Add(time.Hour * 24).Unix(),
+		UserID:           id,
 	}
 	var role string
 	if email == model.Admin {
@@ -24,12 +25,11 @@ func createToken(email string, id string) (*util.TokenDetails, error) {
 	}
 	atClaims := jwt.MapClaims{
 		"role": role,
-		"exp":  token.AccessExpiration,
 		"id":   id,
 	}
 	at := jwt.NewWithClaims(jwt.SigningMethodHS256, atClaims)
 	standardClaims := at.Claims.(jwt.MapClaims)
-	standardClaims["exp"] = time.Now().Add(time.Hour * 24).Unix()
+	standardClaims["exp"] = token.AccessExpiration
 	var err error
 	token.AccessToken, err = at.SignedString([]byte(os.Getenv("ACCESS_SECRET")))
 	token.Role = role
@@ -84,6 +84,7 @@ func validateTokenMiddleware(next http.HandlerFunc) http.HandlerFunc {
 			util.JSONError(http.StatusUnauthorized, w, fmt.Errorf("token is invalid"))
 			return
 		}
+		// todo deal somehow with error here
 		auth := Authorization{
 			Role: claims["role"].(string),
 			ID:   claims["id"].(string),

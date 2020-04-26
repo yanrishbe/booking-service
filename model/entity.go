@@ -29,6 +29,7 @@ func (u User) Entity() (*UserEntity, error) {
 		Patronymic: u.Patronymic,
 		Phone:      u.Phone,
 		Email:      u.Email,
+		Password:   u.Password,
 	}
 	var err error
 	if u.ID != "" {
