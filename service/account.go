@@ -60,6 +60,9 @@ func (ac Account) Get(ctx context.Context, id string) (*util.AccountResponse, er
 	if err != nil {
 		return nil, err
 	}
+	if account == nil {
+		return nil, fmt.Errorf("account does not exist")
+	}
 	accResponse := util.NewAccountResponse(*account)
 	return accResponse, nil
 }

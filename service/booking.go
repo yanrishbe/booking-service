@@ -29,7 +29,15 @@ func (bk Booking) Create(ctx context.Context, newBookingReq util.BookingRequest,
 	if err != nil {
 		return err
 	}
-
+	if user == nil {
+		return fmt.Errorf("user does not exist")
+	}
+	if user.AccountID == "" {
+		return fmt.Errorf("could not create a booking with non-existent account")
+	}
+	if user.BookingID != "" {
+		return fmt.Errorf("a user already has a booking")
+	}
 	account, err := bk.accountsDB.GetAccount(ctx, user.AccountID)
 	if err != nil {
 		return err
@@ -84,8 +92,17 @@ func (bk Booking) Create(ctx context.Context, newBookingReq util.BookingRequest,
 	})
 }
 
-func (bk Booking) Get(ctx context.Context, id string) (*model.Booking, error) {
-	return bk.bookingsDB.GetBooking(ctx, id)
+func (bk Booking) Get(ctx context.Context, id string) (*util.BookingResponse, error) {
+	booking, err := bk.bookingsDB.GetBooking(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	if booking == nil {
+		return nil, fmt.Errorf("there is no such a booking")
+	}
+	resp := util.NewBookingResponse(*booking)
+	return resp, nil
+
 }
 
 func (bk Booking) GetAll(ctx context.Context) ([]util.GetAllBookingsResponse, error) {
@@ -93,7 +110,7 @@ func (bk Booking) GetAll(ctx context.Context) ([]util.GetAllBookingsResponse, er
 	if err != nil {
 		return nil, err
 	}
-	resp := util.NewGetAllBookingsResponse(bookings)
+	resp := util.AllBookingsResponse(bookings)
 	return resp, nil
 }
 
@@ -163,7 +180,7 @@ func (bk Booking) Update(ctx context.Context, newBookingReq util.BookingRequest,
 		return err
 	}
 
-	err = bk.usersDB.UpdateBookingID(ctx, newBookingReq.ID, userID)
+	err = bk.usersDB.UpdateBookingID(ctx, bookingID, userID)
 	if err != nil {
 		return err
 	}
@@ -178,6 +195,6 @@ func (bk Booking) Update(ctx context.Context, newBookingReq util.BookingRequest,
 		Empty:      false,
 		UserID:     &userID,
 		Expiration: &expirationTime,
-		MaxDays:    newBookingReq.MaxDays,
+		MaxDays:    oldBooking.MaxDays + newBookingReq.MaxDays,
 	})
 }

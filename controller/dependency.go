@@ -20,7 +20,7 @@ type User interface {
 type Booking interface {
 	Create(ctx context.Context, newBookingReq util.BookingRequest, userID string) error
 	Update(ctx context.Context, newBookingReq util.BookingRequest, bookingID string, userID string) error
-	Get(ctx context.Context, id string) (*model.Booking, error)
+	Get(ctx context.Context, id string) (*util.BookingResponse, error)
 	GetAll(ctx context.Context) ([]util.GetAllBookingsResponse, error)
 	Delete(ctx context.Context, bookingID string, userID string) error
 }

@@ -42,6 +42,9 @@ func (us User) Login(ctx context.Context, loginRequest util.LoginRequest) (strin
 
 func (us User) Get(ctx context.Context, id string) (*util.UserResponse, error) {
 	user, err := us.usersDB.GetUser(ctx, id)
+	if user == nil {
+		return nil, fmt.Errorf("user does not exist")
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -63,6 +66,9 @@ func (us User) Get(ctx context.Context, id string) (*util.UserResponse, error) {
 }
 
 func (us User) Update(ctx context.Context, userRequest util.UpdateUserRequest) error {
+	if userRequest.Email == model.Admin {
+		return fmt.Errorf("could not update user info: this email is restricted")
+	}
 	return us.usersDB.UpdateUser(ctx, userRequest)
 }
 

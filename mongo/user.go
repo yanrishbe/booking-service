@@ -93,11 +93,23 @@ func NewBooking(ctx context.Context) (*Booking, error) {
 
 func initDatabase(ctx context.Context, users *mongo.Collection, bookings *mongo.Collection, accounts *mongo.Collection) error {
 	userId := primitive.NewObjectID()
-	res, err := accounts.InsertOne(ctx, bson.D{
-		{"bank", model.AdminBank},
-		{"amount", 5000000},
-		{"userId", userId},
-	})
+
+	acc := model.AccountEntity{
+		UserID:         userId,
+		CreditCard:     false,
+		LegalEntity:    true,
+		Blocked:        false,
+		BlockedCounter: 0,
+		Bank:           model.AdminBank,
+		Amount:         5000000,
+	}
+
+	// res, err := accounts.InsertOne(ctx, bson.D{
+	// 	{"bank", model.AdminBank},
+	// 	{"amount", 5000000},
+	// 	{"userId", userId},
+	// })
+	res, err := accounts.InsertOne(ctx, acc)
 	if err != nil {
 		return fmt.Errorf("couldn't create admin account%v", err)
 	}
@@ -106,13 +118,24 @@ func initDatabase(ctx context.Context, users *mongo.Collection, bookings *mongo.
 	if err != nil {
 		return fmt.Errorf("could not hash the admin password")
 	}
-	_, err = users.InsertOne(ctx, bson.D{
-		{"_id", userId},
-		{"email", model.Admin},
-		{"password", string(hash)},
-		{"accountId", accountID},
-	})
 
+	usr := model.UserEntity{
+		ID:         userId,
+		AccountID:  &accountID,
+		Name:       "Yana",
+		Surname:    "Strabuk",
+		Patronymic: "Igorevna",
+		Phone:      "+375333128613",
+		Email:      model.Admin,
+		Password:   string(hash),
+	}
+	// _, err = users.InsertOne(ctx, bson.D{
+	// 	{"_id", userId},
+	// 	{"email", model.Admin},
+	// 	{"password", string(hash)},
+	// 	{"accountId", accountID},
+	// })
+	_, err = users.InsertOne(ctx, usr)
 	if err != nil {
 		return fmt.Errorf("couldn't create admin %v", err)
 	}

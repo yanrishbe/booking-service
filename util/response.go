@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/yanrishbe/booking-service/model"
 )
@@ -17,7 +18,7 @@ type GetAllBookingsResponse struct {
 	Persons int    `json:"persons" bson:"persons"`
 }
 
-func NewGetAllBookingsResponse(bookings []model.Booking) []GetAllBookingsResponse {
+func AllBookingsResponse(bookings []model.Booking) []GetAllBookingsResponse {
 	var resp []GetAllBookingsResponse
 	for i := range bookings {
 		respBooking := GetAllBookingsResponse{
@@ -36,25 +37,50 @@ func NewGetAllBookingsResponse(bookings []model.Booking) []GetAllBookingsRespons
 	return resp
 }
 
+type BookingResponse struct {
+	ID         string     `json:"id,omitempty" bson:"_id,omitempty"`
+	Vip        bool       `json:"vip" bson:"vip"`
+	Price      string     `json:"price" bson:"price"`
+	Stars      int        `json:"stars" bson:"stars"`
+	Persons    int        `json:"persons" bson:"persons"`
+	Expiration *time.Time `json:"expiration" bson:"expiration"`
+	MaxDays    int        `json:"maxDays" bson:"maxDays"`
+}
+
+func NewBookingResponse(booking model.Booking) *BookingResponse {
+	respBooking := BookingResponse{
+		ID:         booking.ID,
+		Vip:        booking.Vip,
+		Stars:      booking.Stars,
+		Persons:    booking.Persons,
+		Expiration: booking.Expiration,
+		MaxDays:    booking.MaxDays,
+	}
+	cents := booking.Price % 100
+	rest := booking.Price / 100
+	price := fmt.Sprintf("%d.%d", rest, cents)
+	respBooking.Price = price
+
+	return &respBooking
+}
+
 type UserResponse struct {
-	*model.Account `json:"account,omitempty"`
-	*model.Booking `json:"booking,omitempty"`
-	ID             string `json:"id,omitempty" bson:"_id,omitempty"`
-	Name           string `json:"name" bson:"name"`
-	Surname        string `json:"surname" bson:"surname"`
-	Patronymic     string `json:"patronymic" bson:"patronymic"`
-	Phone          string `json:"phone" bson:"phone" `
-	Email          string `json:"email" bson:"email"`
-	Password       string `json:"password" bson:"password"`
+	*AccountResponse `json:"account,omitempty"`
+	*BookingResponse `json:"booking,omitempty"`
+	ID               string `json:"id,omitempty" bson:"_id,omitempty"`
+	Name             string `json:"name" bson:"name"`
+	Surname          string `json:"surname" bson:"surname"`
+	Patronymic       string `json:"patronymic" bson:"patronymic"`
+	Phone            string `json:"phone" bson:"phone" `
+	Email            string `json:"email" bson:"email"`
+	Password         string `json:"password" bson:"password"`
 }
 
 func NewUserResponse(user *model.User, account *model.Account, booking *model.Booking) (*UserResponse, error) {
 	if user == nil {
 		return nil, fmt.Errorf("could not create user response: user is empty")
 	}
-	return &UserResponse{
-		Account:    account,
-		Booking:    booking,
+	userResp := UserResponse{
 		ID:         user.ID,
 		Name:       user.Name,
 		Surname:    user.Surname,
@@ -62,7 +88,18 @@ func NewUserResponse(user *model.User, account *model.Account, booking *model.Bo
 		Phone:      user.Phone,
 		Email:      user.Email,
 		Password:   user.Password,
-	}, nil
+	}
+	var accResp *AccountResponse
+	if account != nil {
+		accResp = NewAccountResponse(*account)
+	}
+	var bookResp *BookingResponse
+	if booking != nil {
+		bookResp = NewBookingResponse(*booking)
+	}
+	userResp.AccountResponse = accResp
+	userResp.BookingResponse = bookResp
+	return &userResp, nil
 }
 
 type AccountResponse struct {
