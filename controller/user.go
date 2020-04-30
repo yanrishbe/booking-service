@@ -24,6 +24,7 @@ func newUserRouter(service User) *userRouter {
 	}
 
 	router.Path("").Methods(http.MethodPost).HandlerFunc(router.createUser)
+	router.Path("").Methods(http.MethodGet).HandlerFunc(validateTokenMiddleware(router.getAllUsers))
 	router.Path("/login").Methods(http.MethodPost).HandlerFunc(router.loginUser)
 	router.Path("/{id}").Methods(http.MethodGet).HandlerFunc(validateTokenMiddleware(router.getUser))
 	router.Path("/{id}").Methods(http.MethodPut).HandlerFunc(validateTokenMiddleware(router.updateUser))
@@ -48,6 +49,25 @@ func (ur userRouter) createUser(w http.ResponseWriter, r *http.Request) {
 		ID string `json:"userId"`
 	}
 	util.JSON(w, idUser{ID: id})
+}
+
+func (ur userRouter) getAllUsers(w http.ResponseWriter, r *http.Request) {
+	auth, ok := r.Context().Value("auth").(Authorization)
+	if !ok {
+		util.JSONError(http.StatusUnauthorized, w, fmt.Errorf("user doesn't have enough rights to use resource"))
+		return
+	}
+	if auth.Role != "admin" {
+		util.JSONError(http.StatusUnauthorized, w, fmt.Errorf("user doesn't have enough rights to use resource"))
+		return
+
+	}
+	response, err := ur.service.GetAllUsers(r.Context())
+	if err != nil {
+		util.JSONError(http.StatusInternalServerError, w, err)
+		return
+	}
+	util.JSON(w, response)
 }
 
 func (ur userRouter) loginUser(w http.ResponseWriter, r *http.Request) {

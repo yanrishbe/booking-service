@@ -128,3 +128,14 @@ func (us User) DeleteAccount(ctx context.Context, accountID string, userID strin
 	}
 	return account.Amount, nil
 }
+
+func (us User) GetAllUsers(ctx context.Context) ([]util.GetAllUsersResponse, error) {
+	users, err := us.usersDB.GetAllUsers(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if users == nil {
+		return nil, nil
+	}
+	return util.AllUsersResponse(users), nil
+}

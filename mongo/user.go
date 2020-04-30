@@ -104,11 +104,6 @@ func initDatabase(ctx context.Context, users *mongo.Collection, bookings *mongo.
 		Amount:         5000000,
 	}
 
-	// res, err := accounts.InsertOne(ctx, bson.D{
-	// 	{"bank", model.AdminBank},
-	// 	{"amount", 5000000},
-	// 	{"userId", userId},
-	// })
 	res, err := accounts.InsertOne(ctx, acc)
 	if err != nil {
 		return fmt.Errorf("couldn't create admin account%v", err)
@@ -129,12 +124,6 @@ func initDatabase(ctx context.Context, users *mongo.Collection, bookings *mongo.
 		Email:      model.Admin,
 		Password:   string(hash),
 	}
-	// _, err = users.InsertOne(ctx, bson.D{
-	// 	{"_id", userId},
-	// 	{"email", model.Admin},
-	// 	{"password", string(hash)},
-	// 	{"accountId", accountID},
-	// })
 	_, err = users.InsertOne(ctx, usr)
 	if err != nil {
 		return fmt.Errorf("couldn't create admin %v", err)
@@ -409,4 +398,42 @@ func (bs Booking) DeleteUser(ctx context.Context, id string) error {
 		return fmt.Errorf("could not delete a user %s", id)
 	}
 	return nil
+}
+
+func (bs Booking) GetAllUsers(ctx context.Context) ([]model.User, error) {
+	opts := options.Find().SetProjection(bson.M{
+		"_id":        1,
+		"accountId":  1,
+		"bookingId":  1,
+		"name":       1,
+		"surname":    1,
+		"patronymic": 1,
+		"phone":      1,
+		"email":      1,
+	})
+	cur, err := bs.users.Find(ctx, bson.M{}, opts)
+	if err != nil {
+		return nil, fmt.Errorf("could not find all users %v", err)
+	}
+	var userEntities []model.UserEntity
+	for cur.Next(ctx) {
+		var userEntity model.UserEntity
+		err := cur.Decode(&userEntity)
+		if err != nil {
+			return nil, fmt.Errorf("could not decode mongo response %v", err)
+		}
+		userEntities = append(userEntities, userEntity)
+	}
+	defer func() {
+		log.Println(cur.Close(ctx))
+	}()
+	err = cur.Err()
+	if err != nil {
+		return nil, fmt.Errorf("cursor error %v", err)
+	}
+	var users []model.User
+	for i := range userEntities {
+		users = append(users, userEntities[i].DTO())
+	}
+	return users, nil
 }

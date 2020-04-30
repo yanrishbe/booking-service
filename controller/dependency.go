@@ -14,6 +14,7 @@ type User interface {
 	Get(ctx context.Context, id string) (*util.UserResponse, error)
 	Delete(ctx context.Context, id string) error
 	Update(ctx context.Context, userRequest util.UpdateUserRequest) error
+	GetAllUsers(ctx context.Context) ([]util.GetAllUsersResponse, error)
 }
 
 // Booking defines interface for booking-related CRUD operations.
