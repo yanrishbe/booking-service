@@ -11,32 +11,43 @@ import (
 )
 
 type GetAllUsersResponse struct {
-	ID         string `json:"id,omitempty" bson:"_id,omitempty"`
-	AccountID  string `json:"accountId,omitempty" bson:"accountId"`
-	BookingID  string `json:"bookingId,omitempty" bson:"bookingId"`
-	Name       string `json:"name" bson:"name"`
-	Surname    string `json:"surname" bson:"surname"`
-	Patronymic string `json:"patronymic" bson:"patronymic"`
-	Phone      string `json:"phone" bson:"phone" `
-	Email      string `json:"email" bson:"email"`
+	ID               string `json:"id,omitempty" bson:"_id,omitempty"`
+	AccountID        string `json:"accountId,omitempty" bson:"accountId"`
+	*BookingResponse `json:"booking,omitempty"`
+	Name             string `json:"name" bson:"name"`
+	Surname          string `json:"surname" bson:"surname"`
+	Patronymic       string `json:"patronymic" bson:"patronymic"`
+	Phone            string `json:"phone" bson:"phone" `
+	Email            string `json:"email" bson:"email"`
 }
 
-func AllUsersResponse(users []model.User) []GetAllUsersResponse {
+func AllUsersResponse(users []model.User, bookings []model.Booking) []GetAllUsersResponse {
 	var resp []GetAllUsersResponse
 	for i := range users {
 		user := GetAllUsersResponse{
 			ID:         users[i].ID,
 			AccountID:  users[i].AccountID,
-			BookingID:  users[i].BookingID,
 			Name:       users[i].Name,
 			Surname:    users[i].Surname,
 			Patronymic: users[i].Patronymic,
 			Phone:      users[i].Phone,
 			Email:      users[i].Email,
 		}
+		matchBooking(&user, bookings)
 		resp = append(resp, user)
 	}
 	return resp
+}
+
+func matchBooking(user *GetAllUsersResponse, bookings []model.Booking) {
+	for i := range bookings {
+		if bookings[i].UserID != nil {
+			if user.ID == *bookings[i].UserID {
+				user.BookingResponse = NewBookingResponse(bookings[i])
+				return
+			}
+		}
+	}
 }
 
 type GetAllBookingsResponse struct {

@@ -137,5 +137,9 @@ func (us User) GetAllUsers(ctx context.Context) ([]util.GetAllUsersResponse, err
 	if users == nil {
 		return nil, nil
 	}
-	return util.AllUsersResponse(users), nil
+	bookings, err := us.bookingsDB.GetAllBookings(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return util.AllUsersResponse(users, bookings), nil
 }
