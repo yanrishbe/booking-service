@@ -97,7 +97,7 @@ func NewBookingResponse(booking model.Booking) *BookingResponse {
 		Vip:        booking.Vip,
 		Stars:      booking.Stars,
 		Persons:    booking.Persons,
-		Expiration: booking.Expiration.Format(time.ANSIC),
+		Expiration: booking.Expiration.In(time.Local).Format(time.ANSIC),
 		MaxDays:    booking.MaxDays,
 	}
 	cents := booking.Price % 100
