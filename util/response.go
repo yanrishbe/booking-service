@@ -52,10 +52,12 @@ func matchBooking(user *GetAllUsersResponse, bookings []model.Booking) {
 
 type GetAllBookingsResponse struct {
 	ID      string `json:"id,omitempty" bson:"_id,omitempty"`
-	Vip     bool   `json:"vip" bson:"vip"`
+	Vip     bool   `json:"isVip" bson:"vip"`
 	Price   string `json:"price" bson:"price"`
 	Stars   int    `json:"stars" bson:"stars"`
 	Persons int    `json:"persons" bson:"persons"`
+	URL     string `json:"url" bson:"url"`
+	Empty   bool   `json:"empty" bson:"empty"`
 }
 
 func AllBookingsResponse(bookings []model.Booking) []GetAllBookingsResponse {
@@ -66,6 +68,8 @@ func AllBookingsResponse(bookings []model.Booking) []GetAllBookingsResponse {
 			Vip:     bookings[i].Vip,
 			Stars:   bookings[i].Stars,
 			Persons: bookings[i].Persons,
+			URL:     bookings[i].URL,
+			Empty:   bookings[i].Empty,
 		}
 		cents := bookings[i].Price % 100
 		rest := bookings[i].Price / 100
@@ -78,13 +82,13 @@ func AllBookingsResponse(bookings []model.Booking) []GetAllBookingsResponse {
 }
 
 type BookingResponse struct {
-	ID         string     `json:"id,omitempty" bson:"_id,omitempty"`
-	Vip        bool       `json:"vip" bson:"vip"`
-	Price      string     `json:"price" bson:"price"`
-	Stars      int        `json:"stars" bson:"stars"`
-	Persons    int        `json:"persons" bson:"persons"`
-	Expiration *time.Time `json:"expiration" bson:"expiration"`
-	MaxDays    int        `json:"maxDays" bson:"maxDays"`
+	ID         string `json:"id,omitempty" bson:"_id,omitempty"`
+	Vip        bool   `json:"vip" bson:"vip"`
+	Price      string `json:"price" bson:"price"`
+	Stars      int    `json:"stars" bson:"stars"`
+	Persons    int    `json:"persons" bson:"persons"`
+	Expiration string `json:"expiration" bson:"expiration"`
+	MaxDays    int    `json:"maxDays" bson:"maxDays"`
 }
 
 func NewBookingResponse(booking model.Booking) *BookingResponse {
@@ -93,7 +97,7 @@ func NewBookingResponse(booking model.Booking) *BookingResponse {
 		Vip:        booking.Vip,
 		Stars:      booking.Stars,
 		Persons:    booking.Persons,
-		Expiration: booking.Expiration,
+		Expiration: booking.Expiration.Format(time.ANSIC),
 		MaxDays:    booking.MaxDays,
 	}
 	cents := booking.Price % 100

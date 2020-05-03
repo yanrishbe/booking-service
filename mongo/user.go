@@ -136,6 +136,7 @@ func initDatabase(ctx context.Context, users *mongo.Collection, bookings *mongo.
 			Price:   10000,
 			Stars:   5,
 			Persons: 3,
+			URL:     "https://q-cf.bstatic.com/images/hotel/max1280x900/116/116877981.jpg",
 		},
 		{
 			Vip:     false,
@@ -143,6 +144,7 @@ func initDatabase(ctx context.Context, users *mongo.Collection, bookings *mongo.
 			Price:   7000,
 			Stars:   3,
 			Persons: 2,
+			URL:     "https://q-cf.bstatic.com/images/hotel/max1280x900/142/142439538.jpg",
 		},
 		{
 			Vip:     false,
@@ -150,6 +152,7 @@ func initDatabase(ctx context.Context, users *mongo.Collection, bookings *mongo.
 			Price:   8000,
 			Stars:   3,
 			Persons: 3,
+			URL:     "https://r-cf.bstatic.com/images/hotel/max1280x900/196/196133206.jpg",
 		},
 		{
 			Vip:     false,
@@ -157,6 +160,7 @@ func initDatabase(ctx context.Context, users *mongo.Collection, bookings *mongo.
 			Price:   5000,
 			Stars:   1,
 			Persons: 1,
+			URL:     "https://q-cf.bstatic.com/images/hotel/max1280x900/903/90324779.jpg",
 		},
 		{
 			Vip:     true,
@@ -164,6 +168,7 @@ func initDatabase(ctx context.Context, users *mongo.Collection, bookings *mongo.
 			Price:   20000,
 			Stars:   5,
 			Persons: 2,
+			URL:     "https://q-cf.bstatic.com/images/hotel/max1280x900/140/140512929.jpg",
 		},
 		{
 			Vip:     true,
@@ -171,6 +176,7 @@ func initDatabase(ctx context.Context, users *mongo.Collection, bookings *mongo.
 			Price:   12000,
 			Stars:   4,
 			Persons: 2,
+			URL:     "https://r-cf.bstatic.com/images/hotel/max1280x900/966/96678835.jpg",
 		},
 		{
 			Vip:     false,
@@ -178,6 +184,7 @@ func initDatabase(ctx context.Context, users *mongo.Collection, bookings *mongo.
 			Price:   6500,
 			Stars:   3,
 			Persons: 3,
+			URL:     "https://q-cf.bstatic.com/images/hotel/max1280x900/500/50089031.jpg",
 		},
 		{
 			Vip:     false,
@@ -185,6 +192,7 @@ func initDatabase(ctx context.Context, users *mongo.Collection, bookings *mongo.
 			Price:   7500,
 			Stars:   3,
 			Persons: 1,
+			URL:     "https://q-cf.bstatic.com/images/hotel/max1280x900/138/138670097.jpg",
 		},
 		{
 			Vip:     false,
@@ -192,6 +200,7 @@ func initDatabase(ctx context.Context, users *mongo.Collection, bookings *mongo.
 			Price:   10000,
 			Stars:   4,
 			Persons: 4,
+			URL:     "https://r-cf.bstatic.com/images/hotel/max1280x900/449/44956730.jpg",
 		},
 		{
 			Vip:     true,
@@ -199,6 +208,7 @@ func initDatabase(ctx context.Context, users *mongo.Collection, bookings *mongo.
 			Price:   19000,
 			Stars:   5,
 			Persons: 2,
+			URL:     "https://r-cf.bstatic.com/images/hotel/max1280x900/530/53032375.jpg",
 		},
 	}
 	interfaceList := make([]interface{}, len(rooms))

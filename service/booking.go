@@ -159,6 +159,10 @@ func (bk Booking) Update(ctx context.Context, newBookingReq util.BookingRequest,
 		return err
 	}
 
+	if newBookingReq.MaxDays < 0 && -1*newBookingReq.MaxDays > oldBooking.MaxDays {
+		return fmt.Errorf("amount of days can't be negative")
+	}
+
 	price := oldBooking.Price * newBookingReq.MaxDays
 	if account.Amount < price {
 		return fmt.Errorf("insufficient funds to update the booking")

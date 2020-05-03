@@ -156,6 +156,7 @@ type Booking struct {
 	UserID     *string    `json:"userId" bson:"userId"`
 	Expiration *time.Time `json:"expiration" bson:"expiration"`
 	MaxDays    int        `json:"maxDays" bson:"maxDays"`
+	URL        string     `json:"url" bson:"url"`
 }
 
 func (b Booking) Entity() (*BookingEntity, error) {
@@ -167,6 +168,7 @@ func (b Booking) Entity() (*BookingEntity, error) {
 		Empty:      b.Empty,
 		Expiration: b.Expiration,
 		MaxDays:    b.MaxDays,
+		URL:        b.URL,
 	}
 	var err error
 	if b.ID != "" {
@@ -195,6 +197,7 @@ type BookingEntity struct {
 	UserID     *primitive.ObjectID `json:"userId" bson:"userId"`
 	Expiration *time.Time          `json:"expiration" bson:"expiration"`
 	MaxDays    int                 `json:"maxDays" bson:"maxDays"`
+	URL        string              `json:"url" bson:"url"`
 }
 
 func (be BookingEntity) DTO() Booking {
@@ -207,6 +210,7 @@ func (be BookingEntity) DTO() Booking {
 		Empty:      be.Empty,
 		Expiration: be.Expiration,
 		MaxDays:    be.MaxDays,
+		URL:        be.URL,
 	}
 	if be.UserID != nil {
 		userID := be.UserID.Hex()
